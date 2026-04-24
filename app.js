@@ -162,9 +162,9 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
       "images/2601_189.jpg",
       "images/2601_189.jpg",
       "images/2601_189.jpg",
-      "images/2601_189.jpgg",
-      "images/sa-ca-01.png",
-      "images/sa-ca-01.png"
+      "images/2601_189.jpg",
+      "images/2601_189.jpg",
+      "images/2601_189.jpg"
     ],
     data: {
       "2031": [],
