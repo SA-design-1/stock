@@ -160,12 +160,11 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     yearPlaceholder: "연도",
     galleryImages: [
       "images/2601_189.jpg",
-      "images/2602_190.jpg",
-      "images/sa-d-9.jpg",
-      "images/sa-d-4.jpg",
-      "images/sa-d-5.jpg",
-      "images/sa-d-2.jpg",
-      "images/sa-d-1.jpg"
+      "images/2601_189.jpg",
+      "images/2601_189.jpg",
+      "images/2601_189.jpgg",
+      "images/sa-ca-01.png",
+      "images/sa-ca-01.png"
     ],
     data: {
       "2031": [],
@@ -217,7 +216,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
       "2029": [],
       "2028": [],
       "2027": [],
-      "2026": ["5월 화성"]
+      "2026": ["5월 화성", "190회", "189회"]
     },
     currentStock: 0
   }
