@@ -159,10 +159,10 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     title: "도록 | Major Auction",
     yearPlaceholder: "연도",
     galleryImages: [
-      "images/sa-ca-01.png",
-      "images/sa-ca-01.png",
-      "images/sa-ca-01.png",
-      "images/sa-ca-01.png",
+      "images/2601_189.jpg",
+      "images/2601_189.jpg",
+      "images/2601_189.jpg",
+      "images/2601_189.jpgg",
       "images/sa-ca-01.png",
       "images/sa-ca-01.png"
     ],
@@ -189,9 +189,12 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
       "images/sa-ca-02.png"
     ],
     data: {
-      "2026": ["3월"],
-      "2025": ["3월", "5월", "7월", "11월"],
-      "2024": ["3월", "5월", "7월", "11월"]
+      "2031": [],
+      "2030": [],
+      "2029": [],
+      "2028": [],
+      "2027": [],
+      "2026": ["3월 컨템", "6월 컨템"]
     },
     currentStock: 0
   },
@@ -208,9 +211,12 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
       "images/sa-ca-03.png"
     ],
     data: {
-      "2026": ["5월 화성"],
-      "2025": ["5월 화성"],
-      "2024": ["5월 화성"]
+      "2031": [],
+      "2030": [],
+      "2029": [],
+      "2028": [],
+      "2027": [],
+      "2026": ["5월 화성"]
     },
     currentStock: 0
   }
