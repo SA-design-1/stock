@@ -1927,20 +1927,20 @@ if(item.img && (!item.images || !item.images[0])){
         });
       });
 
-      app.querySelectorAll("[data-catalog-open]").forEach(el => {
-        const go = () => {
-          const catalogId = el.getAttribute("data-catalog-open") || "";
-          if(!catalogId) return;
-          location.hash = `#/request/catalog/${encodeURIComponent(catalogId)}`;
-        };
-        el.addEventListener("click", go);
-        el.addEventListener("keydown", (e) => {
-          if(e.key === "Enter" || e.key === " "){
-            e.preventDefault();
-            go();
-          }
-        });
-      });
+      app.querySelectorAll("[data-open]").forEach(el => {
+  const go = () => {
+    if(mode === "list") return;
+    location.hash = `#/${mode}/item/${el.dataset.open}`;
+  };
+
+  el.addEventListener("click", go);
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      go();
+    }
+  });
+});
     }
 
 
