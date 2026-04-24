@@ -160,11 +160,11 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     yearPlaceholder: "연도",
     galleryImages: [
       "images/2601_189.jpg",
-      "images/2601_189.jpg",
-      "images/2601_189.jpg",
-      "images/2601_189.jpgg",
-      "images/sa-ca-01.png",
-      "images/sa-ca-01.png"
+      "images/2602_190.jpg",
+      "images/sa-d-1.jpg",
+      "images/sa-d-2.jpg",
+      "images/sa-d-3.jpg",
+      "images/sa-d-4.jpg"
     ],
     data: {
       "2031": [],
