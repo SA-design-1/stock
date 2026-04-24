@@ -2555,8 +2555,15 @@ function renderCatalogApplyPage(catalogId){
         ensureLogs(it);
         ensureRequests(it);
 
-        const img1 = (it.images && it.images[0]) ? renderSmartImage(it.images[0], it.name) : iconPlaceholder();
-        const img2 = (it.images && it.images[1]) ? renderSmartImage(it.images[1], it.name) : iconPlaceholder();
+        const detailImages = Array.isArray(it.images)
+  ? it.images.filter(Boolean)
+  : [it.img].filter(Boolean);
+
+const detailImagesHtml = detailImages.length
+  ? detailImages.map(img => `
+      <div class="imgBox requestImgBox">${renderSmartImage(img, it.name)}</div>
+    `).join("")
+  : `<div class="imgBox requestImgBox">${iconPlaceholder()}</div>`;
         const stockNow = calcStock(it);
         const requestRows = getRequestRows();
         const logRows = getLogRows();
