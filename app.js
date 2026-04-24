@@ -216,7 +216,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
       "2029": [],
       "2028": [],
       "2027": [],
-      "2026": ["5월 화성", "190회", "189회"]
+      "2026": ["5월 화성"]
     },
     currentStock: 0
   }
