@@ -1,4 +1,11 @@
-/* app.js - 기존 메인 기능 JS 전체 */
+/* app.js - 기존 내부 script 전체 */
+
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "ef0e8e78-9ec6-4e92-8bed-9f1eff07b903",
+      });
+    });
 
 const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_9p50RVtpPdmZOG2emGTDVg_NQ3bp8U8";
