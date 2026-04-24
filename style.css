@@ -1,5 +1,3 @@
-/* style.css - 기존 CSS 전체 */
-
 :root{
       --bg:#ffffff;
       --text:#111111;
@@ -1973,7 +1971,7 @@ body{
       margin-left:-50vw;
       margin-bottom:20px;
       padding:0;
-      background:#d7e4e4;
+      background:#84cdc984;
       overflow:hidden;
     }
 
@@ -2538,7 +2536,7 @@ body{
         margin-left:-50vw;
         margin-bottom:22px;
         padding:0;
-        background:#d7e4e4;
+        background:#84cdc984;
         overflow:hidden;
       }
 
