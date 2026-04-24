@@ -2577,11 +2577,10 @@ const detailImagesHtml = detailImages.length
                   <p class="detailAdminSize">${escapeHtml(it.size || "")}</p>
                 </div>
                 <div class="detailImageFrame">
-                  <div class="imgRow requestImgRow">
-                    <div class="imgBox requestImgBox">${img1}</div>
-                    <div class="imgBox requestImgBox">${img2}</div>
-                  </div>
-                </div>
+  <div class="imgRow requestImgRow ${detailImages.length === 1 ? "oneImage" : ""}">
+    ${detailImagesHtml}
+  </div>
+</div>
               </div>
 
               <div class="statsGrid requestStatsGrid">
