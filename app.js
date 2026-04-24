@@ -453,7 +453,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
             size:"",
             baseStock:1000,
             img:"images/sa-GM-T-black.jpg",
-            images:["images/sa-GM-T-black.jpg", null],
+            images:["images/sa-GM-T-black.jpg"],
             logs:[],
             price:"35,700원"
           },
@@ -463,7 +463,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
             size:"",
             baseStock:1000,
             img:"images/sa-GM-T-white.jpg",
-            images:["images/sa-GM-T-white.jpg", null],
+            images:["images/sa-GM-T-white.jpg"],
             logs:[],
             price:"35,700원"
           },
@@ -473,7 +473,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
             size:"310*200*40mm",
             baseStock:1000,
             img:"SA-bag.jpg",
-            images:["SA-bag.jpg", null],
+            images:["SA-bag.jpg"],
             logs:[],
             price:"24,000원"
           }
@@ -1422,16 +1422,22 @@ function calcStock(it){
     }
 
     function setTopTitleByMode(mode){
-      if(mode === "request"){
-        topTitle.textContent = "물품 신청하기";
-      }else if(mode === "list"){
-        topTitle.textContent = "물품 재고 현황";
-      }else if(mode === "admin"){
-        topTitle.textContent = "관리자 페이지";
-      }else{
-        topTitle.textContent = "창고수량재고";
-      }
+  const hash = location.hash || "";
+
+  if(mode === "request"){
+    if(hash.includes("/catalog/")){
+      topTitle.textContent = "도록 신청하기";
+    }else{
+      topTitle.textContent = "물품 신청하기";
     }
+  }else if(mode === "list"){
+    topTitle.textContent = "물품 재고 현황";
+  }else if(mode === "admin"){
+    topTitle.textContent = "관리자 페이지";
+  }else{
+    topTitle.textContent = "창고수량재고";
+  }
+}
 
     function setBodyMode(mode){
       document.body.classList.remove("mode-request", "mode-list", "mode-admin", "auth-page");
@@ -1709,7 +1715,7 @@ function calcStock(it){
             ${
               isAdmin
                 ? `<button class="mainHomeBtn adminMintBtn" id="goAdminPage" type="button">관리자 페이지</button>`
-                : `<button class="mainHomeBtn requestDarkBtn" id="goRequestPage" type="button">물품 신청하기</button>`
+                : `<button class="mainHomeBtn requestDarkBtn" id="goRequestPage" type="button"> 신청하기</button>`
             }
             <button class="mainHomeBtn stockBtn" id="goStockPage" type="button">물품 재고현황</button>
             <button class="mainHomeBtn logoutBtn" id="logoutBtn" type="button">로그아웃</button>
