@@ -1,5 +1,5 @@
-// config.js
-
-supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-const SUPABASE_ANON_KEY = "sb_publishable_9p50RVtpPdmZOG2emGTDVg_NQ3bp8U8";
-const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
+/* config.js
+   현재 안정형 분할본에서는 기존 설정 코드를 app.js 안에 그대로 보존했습니다.
+   그래서 이 파일은 비워두어도 됩니다.
+   나중에 Supabase URL/KEY만 따로 관리하고 싶을 때 여기로 옮기면 됩니다.
+*/
