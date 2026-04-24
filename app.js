@@ -1,3 +1,5 @@
+/* app.js - 기존 내부 script 전체 보존 */
+
 window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       await OneSignal.init({
@@ -5,8 +7,8 @@ window.OneSignalDeferred = window.OneSignalDeferred || [];
       });
     });
 
-
-    
+const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_9p50RVtpPdmZOG2emGTDVg_NQ3bp8U8";
 
     let supabaseClient = null;
 
@@ -108,7 +110,7 @@ window.OneSignalDeferred = window.OneSignalDeferred || [];
     console.log("[boot] createClient 존재:", !!(window.supabase && window.supabase.createClient));
 
     if(window.supabase && typeof window.supabase.createClient === "function"){
-      supabaseClient = window.;
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       console.log("[boot] supabaseClient 생성 완료:", !!supabaseClient);
 
       DB.mode = "connected";
