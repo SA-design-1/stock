@@ -1927,20 +1927,12 @@ if(item.img && (!item.images || !item.images[0])){
         });
       });
 
-      app.querySelectorAll("[data-open]").forEach(el => {
-  const go = () => {
-    if(mode === "list") return;
-    location.hash = `#/${mode}/item/${el.dataset.open}`;
-  };
-
-  el.addEventListener("click", go);
-  el.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      go();
-    }
-  });
-});
+      app.querySelectorAll("[data-catalog-open]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.dataset.catalogOpen;
+          location.hash = `#/request/catalog/${id}`;
+        });
+      });
     }
 
 
