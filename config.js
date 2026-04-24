@@ -1,5 +1,9 @@
-/* config.js
-   현재 안정형 분할본에서는 기존 설정 코드를 app.js 안에 그대로 보존했습니다.
-   그래서 이 파일은 비워두어도 됩니다.
-   나중에 Supabase URL/KEY만 따로 관리하고 싶을 때 여기로 옮기면 됩니다.
-*/
+/* config.js - 외부 초기화 설정 */
+
+// OneSignal 초기화
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "ef0e8e78-9ec6-4e92-8bed-9f1eff07b903",
+      });
+    });
