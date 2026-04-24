@@ -592,7 +592,9 @@ const navReload = document.getElementById("navReload");
               if(Array.isArray(s.logs)) it.logs = s.logs;
               if(Array.isArray(s.requests)) it.requests = s.requests;
               if(s.img && !it.img) it.img = s.img;
-              if(Array.isArray(s.images) && (!it.images || !it.images[0])) it.images = s.images;
+              if(Array.isArray(s.images) && s.images.filter(Boolean).length > 0){
+  it.images = s.images.filter(Boolean);
+}
             }
           }
         }
@@ -1087,7 +1089,9 @@ function calcStock(it){
             size: row.size || "",
             baseStock: Number(row.base_stock || 0),
             img: row.img || null,
-            images: Array.isArray(row.images) ? row.images : [row.img || null, null],
+            images: Array.isArray(row.images)
+  ? row.images.filter(Boolean)
+  : [row.img].filter(Boolean),
             logs: [],
             requests: []
           };
@@ -1102,8 +1106,13 @@ function calcStock(it){
         item.size = row.size || item.size || "";
         item.baseStock = Number(row.base_stock || 0);
         item.img = row.img || item.img || null;
-        item.images = Array.isArray(row.images) ? row.images : (item.images || [item.img || null, null]);
-        if(item.img && (!item.images || !item.images[0])) item.images = [item.img, null];
+        item.images = Array.isArray(row.images)
+  ? row.images.filter(Boolean)
+  : (item.images || [item.img]).filter(Boolean);
+
+if(item.img && (!item.images || !item.images[0])){
+  item.images = [item.img].filter(Boolean);
+}
       }
 
       for(const r of (logRows || [])){
