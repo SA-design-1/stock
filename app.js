@@ -345,7 +345,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
             size: "225*310mm",
             baseStock: 1000,
             img: "Warranty-holder(purple).jpg",
-            images: ["Warranty-holder(purple).jpg", "Warranty-holder(purple-in).jpg"],
+            images: ["Warranty-holder(purple).jpg", "Warranty-holder.jpg"],
             logs: [
               { d:"2026-02-12", t:"출고", dept:"운영팀", person:"ooo", qty:90 },
             ]
