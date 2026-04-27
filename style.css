@@ -1589,7 +1589,7 @@ body{
       cursor:pointer;
     }
 
-    .mainLogoImg{ max-width:250px; max-height:88px; object-fit:contain; display:block; opacity:0; visibility:hidden; transition:opacity .15s ease; }
+    .mainLogoImg{ max-width:100px; max-height:88px; object-fit:contain; display:block; opacity:0; visibility:hidden; transition:opacity .15s ease; }
 
     .mainLogoPlaceholder{
       width:200px;
