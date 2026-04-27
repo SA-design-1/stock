@@ -306,7 +306,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
             ],
           },
           {
-            id: "mint-delivery-bag",
+            id: "mint-delivery-bag-big",
             name: "민트봉투(大)",
             size: "290*400mm",
             baseStock: 6500,
@@ -317,7 +317,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
             ]
           },
           {
-            id: "mint-delivery-bag",
+            id: "mint-delivery-bag-small",
             name: "민트봉투(小)",
             size: "290*400mm",
             baseStock: 1000,
@@ -345,17 +345,6 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
             ]
           },
           {
-            id: "holder-purple",
-            name: "수입지홀더(보라색)",
-            size: "225*310mm",
-            baseStock: 1000,
-            img: "Warranty-holder(purple).jpg",
-            images: ["Warranty-holder(purple).jpg", "Warranty-holder.jpg"],
-            logs: [
-              { d:"2026-02-12", t:"출고", dept:"운영팀", person:"ooo", qty:90 },
-            ]
-          },
-          {
             id: "office-holder-sky",
             name: "사무용홀더",
             size: "225*310mm",
@@ -366,6 +355,18 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
               { d:"2026-02-12", t:"출고", dept:"운영팀", person:"ooo", qty:40 },
             ]
           },
+          {
+            id: "holder-purple",
+            name: "수입지홀더(보라색)",
+            size: "225*310mm",
+            baseStock: 1000,
+            img: "Warranty-holder(purple).jpg",
+            images: ["Warranty-holder(purple).jpg", "Warranty-holder.jpg"],
+            logs: [
+              { d:"2026-02-12", t:"출고", dept:"운영팀", person:"ooo", qty:90 },
+            ]
+          },
+        
         ]
       },
       {
