@@ -135,7 +135,7 @@
       justify-content:flex-end;
       margin-left:16px;
       padding-right:16px;
-      min-width:120px;
+      min-width:70px;
     }
 
     .topbar.no-search .topbarLogo{
@@ -1971,7 +1971,7 @@ body{
       margin-left:-50vw;
       margin-bottom:20px;
       padding:0;
-      background: #9bdad789;
+      background: #b9e8e689;
       overflow:hidden;
     }
 
@@ -2536,7 +2536,7 @@ body{
         margin-left:-50vw;
         margin-bottom:22px;
         padding:0;
-        background:#84cdc97f;
+        background: #b9e8e689;
         overflow:hidden;
       }
 
