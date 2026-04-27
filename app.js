@@ -2274,7 +2274,7 @@ function renderCatalogDetail(catalogId){
         if(catalogAddClose) catalogAddClose.addEventListener("click", closeCatalogRequestModal);
 
         if(catalogAddBtn){
-          catalogAddBtn.addEventListener("click", ()=>{
+          catalogAddBtn.addEventListener("click", async ()=>{
             const selectedInfo = getCatalogApplySelection(catalogId);
             const date = app.querySelector("#catalogAddDate")?.value || "";
             const dept = app.querySelector("#catalogAddDept")?.value || "";
@@ -2309,18 +2309,22 @@ function renderCatalogDetail(catalogId){
               round,
               currentStock: stockValue
             });
+
             try{
-  await addCatalogRequestToDB(catalogId, row);
+              await addCatalogRequestToDB(catalogId, row);
 
-  rows.push(row);
-  saveCatalogRequests(catalogId, rows);
+              rows.push(row);
+              saveCatalogRequests(catalogId, rows);
 
-  alert("출고 신청이 접수되었습니다.");
-}catch(err){
-  console.error("도록 신청 DB 저장 실패:", err);
-  alert("DB 저장 중 오류가 발생했습니다.");
-  return;
-});
+              closeCatalogRequestModal();
+              render();
+              alert("출고 신청이 접수되었습니다.");
+            }catch(err){
+              console.error("도록 신청 DB 저장 실패:", err);
+              alert("DB 저장 중 오류가 발생했습니다.");
+              return;
+            }
+          });
         }
 
         const reqDateFilterEl = app.querySelector("#catalogReqDateFilter");
@@ -2456,7 +2460,7 @@ function renderCatalogApplyPage(catalogId){
 
       const submitBtn = app.querySelector("#catalogApplySubmitBtn");
       if(submitBtn){
-        submitBtn.addEventListener("click", ()=>{
+        submitBtn.addEventListener("click", async ()=>{
           const date = app.querySelector("#catalogApplyDate")?.value || "";
           const dept = app.querySelector("#catalogApplyDept")?.value || "";
           const qty = Number(app.querySelector("#catalogApplyQty")?.value || 0);
@@ -2488,10 +2492,20 @@ function renderCatalogApplyPage(catalogId){
             round: selectedRound,
             currentStock
           });
-          rows.push(row);
-          saveCatalogRequests(catalogId, rows);
-          alert("출고 신청이 접수되었습니다.");
-          location.hash = `#/request/catalog/${encodeURIComponent(catalogId)}`;
+
+          try{
+            await addCatalogRequestToDB(catalogId, row);
+
+            rows.push(row);
+            saveCatalogRequests(catalogId, rows);
+
+            alert("출고 신청이 접수되었습니다.");
+            location.hash = `#/request/catalog/${encodeURIComponent(catalogId)}`;
+          }catch(err){
+            console.error("도록 신청 DB 저장 실패:", err);
+            alert("DB 저장 중 오류가 발생했습니다.");
+            return;
+          }
         });
       }
     }
