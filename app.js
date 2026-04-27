@@ -2646,6 +2646,17 @@ const detailImagesHtml = detailImages.length
         const logRows = getLogRows();
 
         app.innerHTML = `
+          <style>
+            @media (max-width: 768px){
+              .requestImgRow.oneImage{
+                justify-content: flex-end !important;
+              }
+              .requestImgRow.oneImage .requestImgBox{
+                margin-left: auto !important;
+                margin-right: 0 !important;
+              }
+            }
+          </style>
           <div class="paper detailPaper ${isRequest ? "requestDetailPaper" : ""}">
             <div class="paper-body detailPaperBody">
               <div class="detailAdminHero">
