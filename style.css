@@ -557,11 +557,9 @@
     }
 
     /* 상세/리스트 들어갔을 때만 선 보이게 */
-body.mode-request .secHead,
-body.mode-list .secHead,
-body.mode-admin .secHead{
-  border-bottom:1px solid rgba(0,0,0,0.08);
-}
+    .body.mode-request .topbar.no-search{
+      border-bottom:1px solid #d9d9d9;
+   }
 
 .secHeadTitle{
   display:flex;
