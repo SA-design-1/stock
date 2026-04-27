@@ -2478,7 +2478,7 @@ body{
         word-break:keep-all;
         overflow-wrap:break-word;
         color: #292929;
-        margin-top:1px;
+        margin-top:px;
       }
 
       .catalogDetailPage{ width:100%; }
