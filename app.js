@@ -828,7 +828,24 @@ function renderCatalogMenuImage(item){
     }
     async function addCatalogRequestToDB(catalogId, row){
   if(!dbReady()) return null;
+async function getCatalogStockFromDB(catalogId, year, round){
+  if(!dbReady()) return 0;
 
+  const { data, error } = await supabaseClient
+    .from("catalog_stocks")
+    .select("current_stock")
+    .eq("catalog_id", catalogId)
+    .eq("catalog_year", String(year))
+    .eq("catalog_round", String(round))
+    .maybeSingle();
+
+  if(error){
+    console.error("재고 조회 실패:", error);
+    return 0;
+  }
+
+  return Number(data?.current_stock || 0);
+}
   const email = await getCurrentUserEmail();
 
   const payload = {
