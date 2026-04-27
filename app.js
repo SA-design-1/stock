@@ -3426,10 +3426,13 @@ const detailImagesHtml = detailImages.length
     });
 
     homeLink?.addEventListener("click", (e)=>{
-      e.preventDefault();
-      if(q) q.value = "";
-      location.hash = "#/";
-    });
+      const titleText = (topTitle?.textContent || "").trim();
+
+  if(titleText === "도록 신청하기"){
+    e.preventDefault();
+    location.hash = "#/request";
+  }
+});
     
     navBack?.addEventListener("click", ()=>{
   const hash = location.hash || "";
