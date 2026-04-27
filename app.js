@@ -1820,7 +1820,7 @@ if(item.img && (!item.images || !item.images[0])){
           <div class="shopInner">
             <div class="shopHead">
               <h2 class="shopTitle">SHOP</h2>
-              <a class="shopLink" href="javascript:void(0)">구매하기 <span>▶</span></a>
+              <a class="shopLink" href="javascript:void(0)">제품 구매하기 <span>▶</span></a>
             </div>
             <div class="shopGrid">
             ${(section.items || []).map(it => `
@@ -2554,6 +2554,9 @@ function renderCatalogApplyPage(catalogId){
       }
 
       const { section, it } = found;
+      if(isRequest && section?.category === "기타"){
+        topTitle.textContent = "제품 구매하기";
+      }
       ensureLogs(it);
       ensureRequests(it);
 
@@ -3432,11 +3435,12 @@ const detailImagesHtml = detailImages.length
     homeLink?.addEventListener("click", (e)=>{
       const titleText = (topTitle?.textContent || "").trim();
 
-  if(titleText === "도록 신청하기"){
-    e.preventDefault();
-    location.hash = "#/request";
-  }
-});
+      if(titleText === "도록 신청하기" || titleText === "물품 신청하기" || titleText === "제품 구매하기"){
+        e.preventDefault();
+        if(q) q.value = "";
+        location.hash = "#/request";
+      }
+    });
     
     navBack?.addEventListener("click", ()=>{
   const hash = location.hash || "";
