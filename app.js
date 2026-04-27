@@ -257,17 +257,22 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     }
 
     function getUnifiedCatalogConfig(catalogId){
-      const base = CATALOG_PAGE_CONFIG["offline-auction"] || {};
-      const galleryImages = Array.isArray(base.galleryImages) ? [...base.galleryImages].reverse() : [];
-      return {
-        ...base,
-        id: catalogId,
-        title: getCatalogDisplayTitle(catalogId),
-        typeLabel: getCatalogTypeLabel(catalogId),
-        typeOptions: getUnifiedCatalogOptions(),
-        galleryImages
-      };
-    }
+  const id = String(catalogId || "offline-auction");
+  const base = CATALOG_PAGE_CONFIG[id] || CATALOG_PAGE_CONFIG["offline-auction"] || {};
+
+  const galleryImages = Array.isArray(base.galleryImages)
+    ? [...base.galleryImages]
+    : [];
+
+  return {
+    ...base,
+    id,
+    title: getCatalogDisplayTitle(id),
+    typeLabel: getCatalogTypeLabel(id),
+    typeOptions: getUnifiedCatalogOptions(),
+    galleryImages
+  };
+}
 
 
     const data = [
