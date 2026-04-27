@@ -1054,6 +1054,7 @@ function calcStock(it){
     const DB_ITEMS = "warehouse_items";
     const DB_LOGS  = "warehouse_logs";
     const DB_REQUESTS = "warehouse_requests";
+    const DB_CATALOG_REQUESTS = "catalog_requests";
 
     async function loadAllFromDB_FORCE(){
       if(!dbReady()) throw new Error("supabaseClient not ready");
