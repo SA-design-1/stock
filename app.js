@@ -3365,6 +3365,14 @@ const detailImagesHtml = detailImages.length
     });
     
     navBack?.addEventListener("click", ()=>{
+  const hash = location.hash || "";
+
+  if(hash.startsWith("#/request/catalog/")){
+    if(q) q.value = "";
+    location.hash = "#/request";
+    return;
+  }
+
   history.back();
 });
 
