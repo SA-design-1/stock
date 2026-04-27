@@ -1494,6 +1494,14 @@ body.mode-admin .secHead{
       background:#fff;
       color:#111;
     }
+    @media (max-width:640px){
+  .dateInput{
+    width:70%;
+    max-width:280px;
+    margin:0 auto;
+    display:block;
+  }
+}
 
     .seg{ display:flex; gap:10px; }
 
