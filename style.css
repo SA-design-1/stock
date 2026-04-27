@@ -1259,7 +1259,7 @@
     .filterDateInput,
     .filterSelectInline{ height:34px; border:1px solid var(--line); padding:0 12px; font-size:12px; font-weight:600; background:#fff; }
 
-    .mintBtn{ background:#84cdc9; border-color:#84cdc9; color:#fff; border-radius:0; }
+    .mintBtn{ background:#84cdc9; border-color: #84cdc9; color:#fff; border-radius:0; }
     .mintBtn:hover{ background:#73c1bc; border-color:#73c1bc; }
 
     .logEmpty{ padding:18px; font-size:13px; color:var(--muted); }
@@ -1304,13 +1304,13 @@
     #openAdd{
       background:rgba(37, 99, 235, 0.15);
       border-color:rgba(37, 99, 235, 0.35);
-      color:#2563eb;
+      color: #2563eb;
     }
 
     #openAdd:hover{
       background:rgba(37, 99, 235, 0.22);
       border-color:rgba(37, 99, 235, 0.45);
-      color:#1d4ed8;
+      color: #1d4ed8;
     }
 
     .headerFilterDate,
@@ -2478,7 +2478,7 @@ body{
         word-break:keep-all;
         overflow-wrap:break-word;
         color: #292929;
-        margin-top:8px;
+        margin-top:4px;
       }
 
       .catalogDetailPage{ width:100%; }
