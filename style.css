@@ -1091,6 +1091,11 @@
       min-height:64px;
       padding:0 38px;
     }
+    @media (max-width: 640px){
+  .catalogApplyTitle{
+    margin-left:12px;   /* ← 이 값으로 위치 조절 */
+  }
+}
 
     .catalogApplyForm{
       border:1px solid var(--line);
