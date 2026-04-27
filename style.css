@@ -553,8 +553,16 @@
       gap:12px;
       margin:0 0 18px;
       padding-bottom:10px;
-      border-bottom:1px solid rgba(0,0,0,0.08);
+      border-bottom:none;
     }
+
+    /* 상세/리스트 들어갔을 때만 선 보이게 */
+body.mode-request .secHead,
+body.mode-list .secHead,
+body.mode-admin .secHead{
+  border-bottom:1px solid rgba(0,0,0,0.08);
+}
+
 .secHeadTitle{
   display:flex;
   align-items:center;
