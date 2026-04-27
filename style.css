@@ -150,13 +150,13 @@
       height:40px;
       object-fit:contain;
       display:block;
-
-      @media (max-width: 640px){
+    }
+    
+    @media (max-width: 640px){
   .topbarLogo img{
     max-width:80px;   /* 모바일에서 작게 */
   }
 }
-    }
 
     .pill{
       height:36px;
