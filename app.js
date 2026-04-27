@@ -356,6 +356,15 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
             ]
           },
           {
+            id: "holder-navy",
+            name: "수입지홀더(남색)",
+            size: "225*310mm",
+            baseStock: 100,
+            img: "Warranty-holder(navy).jpg",
+            images: ["Warranty-holder(navy).jpg", null],
+            logs: []
+          },
+          {
             id: "holder-purple",
             name: "수입지홀더(보라색)",
             size: "225*310mm",
@@ -1064,6 +1073,27 @@ function calcStock(it){
       for(const sec of data) for(const it of sec.items) arr.push(it);
       return arr;
     }
+
+    function applyCustomItemOrder(){
+      const holderOrderIds = ["holder-gray", "office-holder-sky", "holder-navy", "holder-purple"];
+      const holderOrderNames = ["보증서홀더(회색)", "사무용홀더", "수입지홀더(남색)", "수입지홀더(보라색)"];
+      const holderSection = data.find(sec => sec.category === "홀더");
+      if(!holderSection || !Array.isArray(holderSection.items)) return;
+
+      holderSection.items.sort((a, b) => {
+        const ai = holderOrderIds.indexOf(String(a?.id || ""));
+        const bi = holderOrderIds.indexOf(String(b?.id || ""));
+        const an = holderOrderNames.indexOf(String(a?.name || ""));
+        const bn = holderOrderNames.indexOf(String(b?.name || ""));
+
+        const av = ai >= 0 ? ai : (an >= 0 ? an : 999);
+        const bv = bi >= 0 ? bi : (bn >= 0 ? bn : 999);
+
+        if(av !== bv) return av - bv;
+        return String(a?.name || "").localeCompare(String(b?.name || ""), "ko");
+      });
+    }
+
 
     function ensureCategory(cat){
       const name = String(cat || "").trim();
@@ -1841,6 +1871,7 @@ if(item.img && (!item.images || !item.images[0])){
     }
 
     function renderHome(mode = "request"){
+      applyCustomItemOrder();
       topbar.style.display = "flex";
       searchBox.style.display = "flex";
       if(topbarLogo) topbarLogo.classList.remove("show");
