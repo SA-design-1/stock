@@ -1262,7 +1262,7 @@
     .mintBtn{ background:#84cdc9; border-color: #84cdc9; color:#fff; border-radius:0; }
     .mintBtn:hover{ background:#73c1bc; border-color:#73c1bc; }
 
-    .logEmpty{ padding:18px; font-size:13px; color:var(--muted); }
+    .logEmpty{ padding:18px; font-size:10px; color:var(--muted); }
 
     #bulkDeleteRequests,
     #bulkDeleteLogs{
