@@ -366,10 +366,10 @@
     .catalogDetailSub{
       display:flex;
       align-items:center;
-      gap:8px;
-      font-size:18px;
-      font-weight:700;
-      color:#222;
+      gap:10px;
+      font-size:15px;
+      font-weight:400;
+      color: #555555;
       white-space:nowrap;
       letter-spacing:-0.03em;
       
@@ -2484,7 +2484,7 @@ body{
       .catalogDetailPage{ width:100%; }
       .catalogDetailTop{ margin-bottom:28px; }
       .catalogDetailTitle{ font-size:17px; }
-      .catalogDetailSub{ font-size:11px; padding-top:3px; }
+      .catalogDetailSub{ font-size:11px; padding-top:3px; font-weight:400; color: #555555; }
       .catalogDetailFields{ grid-template-columns:110px minmax(0, 1fr); gap:12px; margin-bottom:12px; }
       .catalogDetailControlRow{
         grid-template-columns:repeat(3, minmax(0, 1fr));
