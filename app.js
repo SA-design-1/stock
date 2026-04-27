@@ -2098,7 +2098,11 @@ function renderCatalogDetail(catalogId){
             <div class="paper-body detailPaperBody">
               <div class="catalogDetailPage">
                 <div class="catalogDetailTop">
-                  <h2 class="catalogDetailTitle">${escapeHtml(config.title || "")}</h2>
+                  <h2 class="catalogDetailTitle">
+  <span class="catalogTitleKr">도록</span>
+  <span class="catalogTitleDivider">|</span>
+  <span class="catalogTitleEn">${escapeHtml(getCatalogTypeLabel(catalogId))}</span>
+</h2>
                 </div>
 
               
