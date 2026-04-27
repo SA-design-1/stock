@@ -826,6 +826,33 @@ function renderCatalogMenuImage(item){
         console.error("catalog request save 실패:", err);
       }
     }
+    async function addCatalogRequestToDB(catalogId, row){
+  if(!dbReady()) return null;
+
+  const email = await getCurrentUserEmail();
+
+  const payload = {
+    catalog_id: catalogId,
+    catalog_title: getCatalogDisplayTitle(catalogId),
+    catalog_year: String(row.year || ""),
+    catalog_round: String(row.round || ""),
+    qty: Number(row.qty || 0),
+    department: row.dept || "-",
+    requester_name: row.person || "",
+    requester_email: email || "",
+    status: "pending",
+    current_stock: Number(row.currentStock || 0)
+  };
+
+  const { data, error } = await supabaseClient
+    .from(DB_CATALOG_REQUESTS)
+    .insert(payload)
+    .select("*")
+    .single();
+
+  if(error) throw error;
+  return data;
+}
 
     function saveCatalogApplySelection(catalogId, payload){
       try{
@@ -2227,7 +2254,7 @@ function renderCatalogDetail(catalogId){
         }
 
         if(submitBtn){
-          submitBtn.addEventListener("click", ()=>{
+          submitBtn.addEventListener("click", async ()=>{
             const year = yearSelect?.value || "";
             const round = roundSelect?.value || activeRound || "";
             if(!year){
@@ -2282,12 +2309,18 @@ function renderCatalogDetail(catalogId){
               round,
               currentStock: stockValue
             });
-            rows.push(row);
-            saveCatalogRequests(catalogId, rows);
-            closeCatalogRequestModal();
-            render();
-            alert("출고 신청이 접수되었습니다.");
-          });
+            try{
+  await addCatalogRequestToDB(catalogId, row);
+
+  rows.push(row);
+  saveCatalogRequests(catalogId, rows);
+
+  alert("출고 신청이 접수되었습니다.");
+}catch(err){
+  console.error("도록 신청 DB 저장 실패:", err);
+  alert("DB 저장 중 오류가 발생했습니다.");
+  return;
+});
         }
 
         const reqDateFilterEl = app.querySelector("#catalogReqDateFilter");
