@@ -125,6 +125,24 @@
       background:#fff;
     }
 
+    #doSearch{
+  height:34px;
+  padding:0 14px;
+  border:none;
+  background:#292929;   /* 항상 보이게 */
+  color:#fff;
+  font-size:12px;
+  cursor:pointer;
+}
+
+#doSearch:active{
+  background:#000;
+}
+
+#doSearch:hover{
+  background:#444;
+}
+
     .search input:focus{
       border-color:#2a2a2aae;
     }
