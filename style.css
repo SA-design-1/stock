@@ -2091,6 +2091,36 @@ body{
       letter-spacing:-0.02em;
     }
 
+    .catalogDetailTitle{
+  display:flex;
+  align-items:center;
+  margin:0;
+}
+
+.catalogTitleKr{
+  font-size:20px;
+  font-weight:700;
+  color:#111;
+}
+
+.catalogTitleDivider{
+  font-size:18px;
+  color:#999;
+  margin:0 8px;
+}
+
+.catalogTitleEn{
+  font-size:14px;
+  font-weight:400;
+  color:#666;
+}
+
+@media (max-width:640px){
+  .catalogTitleKr{ font-size:17px; }
+  .catalogTitleDivider{ font-size:13px; }
+  .catalogTitleEn{ font-size:11px; }
+}
+
     @media (max-width: 1280px){
       .listGrid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
       .mainHomeBtns{ grid-template-columns:1fr 1fr 1fr; }
