@@ -4814,11 +4814,21 @@ async function renderCatalogDetail(catalogId){
 
     function openCatalogRequestModal(){
       if(isAdmin) return;
-      catalogAddModal?.classList.add("show");
+      const modalEl = app.querySelector("#catalogAddModal");
+      const dateEl = app.querySelector("#catalogAddDate");
+      if(!modalEl) return;
+      modalEl.classList.add("show");
+      modalEl.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
-      if(catalogAddDate && !catalogAddDate.value) catalogAddDate.value = new Date().toISOString().slice(0, 10);
+      if(dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
     }
-    function closeCatalogRequestModal(){ catalogAddModal?.classList.remove("show"); document.body.style.overflow = ""; }
+    function closeCatalogRequestModal(){
+      const modalEl = app.querySelector("#catalogAddModal");
+      if(!modalEl) return;
+      modalEl.classList.remove("show");
+      modalEl.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
 
     app.querySelector("#catalogWholeBackBtn")?.addEventListener("click", __goCatalogWholeSection);
     typeSelect?.addEventListener("change", ()=>{
