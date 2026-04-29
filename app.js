@@ -159,10 +159,10 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     title: "도록 | Major Auction",
     yearPlaceholder: "연도",
     galleryImages: [
-      "images/2601_189.jpg",
-      "images/2601_189.jpg",
-      "images/2601_189.jpg",
-      "images/2601_189.jpg",
+      "images/1/2601_189.jpg",
+      "images/1/2602_190.jpg",
+      "images/1/2603_contem.jpg",
+      "images/1/sa-d-1.jpg",
       "images/sa-ca-01.png",
       "images/sa-ca-01.png"
     ],
@@ -519,6 +519,23 @@ const navReload = document.getElementById("navReload");
     const topbar = document.getElementById("topbar");
     const topTitle = document.getElementById("topTitle");
 
+    const TOPBAR_TITLE_LOGO_HTML = `<img src="images/sa-logo-5.jpg" class="topLogo" alt="SeoulAuction">`;
+    const TOPBAR_RIGHT_LOGO_HTML = `<img src="images/sa-logo-5.jpg" alt="SeoulAuction">`;
+    const TOPBAR_CATALOG_SEARCH_HTML = `<input id="catalogSearch" class="catalogTopSearch" type="text" placeholder="" aria-label="검색">`;
+
+    function setTopbarTitleLogo(){
+      if(topTitle) topTitle.innerHTML = TOPBAR_TITLE_LOGO_HTML;
+    }
+
+    function setTopbarRightLogo(){
+      if(topbarLogo) topbarLogo.innerHTML = TOPBAR_RIGHT_LOGO_HTML;
+    }
+
+    function setTopbarRightSearch(){
+      if(!topbarLogo) return;
+      topbarLogo.innerHTML = TOPBAR_CATALOG_SEARCH_HTML;
+    }
+
     const itemModal = document.getElementById("itemModal");
     const itemOverlay = document.getElementById("itemOverlay");
     const itemClose = document.getElementById("itemClose");
@@ -807,6 +824,42 @@ function renderCatalogMenuImage(item){
       `;
     }
 
+
+    function renderStockCatalogSummary(){
+      const cards = [
+        { title:"Major Auction", year:"2026", round:"191회", stock:"10개", id:"offline-auction" },
+        { title:"Contemporary<br>Art Sale", year:"2026", round:"3월", stock:"5개", id:"contemporary-art-auction" },
+        { title:"ZERO BASE", year:"2026", round:"5월 화성", stock:"5개", id:"zero-base" }
+      ];
+
+      return `
+        <div class="stockCatalogSection">
+          <div class="stockCatalogHead">
+            <div class="stockCatalogTitle">
+              <span>도록</span>
+              <em>|</em>
+              <small>Catalogue</small>
+            </div>
+            <div class="stockCatalogRight">재고</div>
+          </div>
+
+          <div class="stockCatalogCards">
+            ${cards.map(card => `
+              <button class="stockCatalogCard" type="button" data-catalog-open="${escapeAttr(card.id)}">
+                <div class="stockCatalogCardTitle">${card.title}</div>
+                <div class="stockCatalogLine"></div>
+                <div class="stockCatalogYear">${escapeHtml(card.year)}</div>
+                <div class="stockCatalogRound">${escapeHtml(card.round)}</div>
+                <div class="stockCatalogLine"></div>
+                <div class="stockCatalogQty">${escapeHtml(card.stock)}</div>
+              </button>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+
     function getCatalogApplyStorageKey(catalogId){
       return `catalog_apply_selection_${catalogId}`;
     }
@@ -835,50 +888,107 @@ function renderCatalogMenuImage(item){
         console.error("catalog request save 실패:", err);
       }
     }
+    async function getCatalogStockFromDB(catalogId, year, round){
+      if(!dbReady()) return 0;
+
+      const { data, error } = await supabaseClient
+        .from(DB_CATALOG_STOCKS)
+        .select("current_stock")
+        .eq("catalog_id", catalogId)
+        .eq("catalog_year", String(year || ""))
+        .eq("catalog_round", String(round || ""))
+        .maybeSingle();
+
+      if(error){
+        console.error("도록 재고 조회 실패:", error);
+        return 0;
+      }
+
+      return Number(data?.current_stock || 0);
+    }
+
+    async function loadCatalogRequestsFromDB(catalogId){
+      if(!dbReady()) return null;
+
+      const { data, error } = await supabaseClient
+        .from(DB_CATALOG_REQUESTS)
+        .select("id, catalog_id, catalog_title, catalog_year, catalog_round, qty, department, requester_name, requester_email, status, current_stock, created_at, approved_at, approved_by, rejected_at, rejected_by")
+        .eq("catalog_id", catalogId)
+        .order("created_at", { ascending:false });
+
+      if(error){
+        console.error("도록 신청내역 조회 실패:", error);
+        return null;
+      }
+
+      return (data || []).map(r => normalizeLog({
+        d: r.created_at,
+        t: "신청",
+        dept: r.department || "-",
+        person: r.requester_name || "",
+        qty: Number(r.qty || 0),
+        __key: `catalog_req_${r.id}`,
+        _dbid: r.id,
+        email: r.requester_email || "",
+        status: r.status || "pending",
+        year: r.catalog_year || "",
+        round: r.catalog_round || "",
+        currentStock: Number(r.current_stock || 0),
+        approved_at: r.approved_at || "",
+        approved_by: r.approved_by || "",
+        rejected_at: r.rejected_at || "",
+        rejected_by: r.rejected_by || ""
+      }));
+    }
+
+    async function syncCatalogRequestsFromDB(catalogId){
+      const rows = await loadCatalogRequestsFromDB(catalogId);
+      if(!rows) return false;
+      saveCatalogRequests(catalogId, rows);
+      return true;
+    }
+
     async function addCatalogRequestToDB(catalogId, row){
-  if(!dbReady()) return null;
-async function getCatalogStockFromDB(catalogId, year, round){
-  if(!dbReady()) return 0;
+      if(!dbReady()) return null;
 
-  const { data, error } = await supabaseClient
-    .from("catalog_stocks")
-    .select("current_stock")
-    .eq("catalog_id", catalogId)
-    .eq("catalog_year", String(year))
-    .eq("catalog_round", String(round))
-    .maybeSingle();
+      const email = await getCurrentUserEmail();
 
-  if(error){
-    console.error("재고 조회 실패:", error);
-    return 0;
-  }
+      const payload = {
+        catalog_id: catalogId,
+        catalog_title: getCatalogDisplayTitle(catalogId),
+        catalog_year: String(row.year || ""),
+        catalog_round: String(row.round || ""),
+        qty: Number(row.qty || 0),
+        department: row.dept || "-",
+        requester_name: row.person || "",
+        requester_email: email || "",
+        status: "pending",
+        current_stock: Number(row.currentStock || 0)
+      };
 
-  return Number(data?.current_stock || 0);
-}
-  const email = await getCurrentUserEmail();
+      const { data, error } = await supabaseClient
+        .from(DB_CATALOG_REQUESTS)
+        .insert(payload)
+        .select("*")
+        .single();
 
-  const payload = {
-    catalog_id: catalogId,
-    catalog_title: getCatalogDisplayTitle(catalogId),
-    catalog_year: String(row.year || ""),
-    catalog_round: String(row.round || ""),
-    qty: Number(row.qty || 0),
-    department: row.dept || "-",
-    requester_name: row.person || "",
-    requester_email: email || "",
-    status: "pending",
-    current_stock: Number(row.currentStock || 0)
-  };
+      if(error) throw error;
+      return data;
+    }
 
-  const { data, error } = await supabaseClient
-    .from(DB_CATALOG_REQUESTS)
-    .insert(payload)
-    .select("*")
-    .single();
+    async function deleteCatalogRequestsByKeys(catalogId, rows){
+      if(!dbReady()) return;
+      const ids = (rows || []).map(r => r?._dbid).filter(Boolean);
+      if(!ids.length) return;
 
-  if(error) throw error;
-  return data;
-}
+      const { error } = await supabaseClient
+        .from(DB_CATALOG_REQUESTS)
+        .delete()
+        .eq("catalog_id", catalogId)
+        .in("id", ids);
+
+      if(error) throw error;
+    }
 
     function saveCatalogApplySelection(catalogId, payload){
       try{
@@ -1512,6 +1622,8 @@ if(item.img && (!item.images || !item.images[0])){
           .on("postgres_changes", { event:"*", schema:"public", table: DB_ITEMS }, () => scheduleDBReload())
           .on("postgres_changes", { event:"*", schema:"public", table: DB_LOGS  }, () => scheduleDBReload())
           .on("postgres_changes", { event:"*", schema:"public", table: DB_REQUESTS }, () => scheduleDBReload())
+          .on("postgres_changes", { event:"*", schema:"public", table: DB_CATALOG_REQUESTS }, () => scheduleDBReload())
+          .on("postgres_changes", { event:"*", schema:"public", table: DB_CATALOG_STOCKS }, () => scheduleDBReload())
           .subscribe(()=>{});
       }catch(e){
         console.error("Realtime 시작 실패:", e);
@@ -1519,25 +1631,11 @@ if(item.img && (!item.images || !item.images[0])){
     }
 
     function setTopTitleByMode(mode){
-  const hash = location.hash || "";
-
-  if(mode === "request"){
-    if(hash.includes("/catalog/")){
-      topTitle.textContent = "도록 신청하기";
-    }else{
-      topTitle.textContent = "물품 신청하기";
+      setTopbarTitleLogo();
     }
-  }else if(mode === "list"){
-    topTitle.textContent = "물품 재고 현황";
-  }else if(mode === "admin"){
-    topTitle.textContent = "관리자 페이지";
-  }else{
-    topTitle.textContent = "창고수량재고";
-  }
-}
 
     function setBodyMode(mode){
-      document.body.classList.remove("mode-request", "mode-list", "mode-admin", "auth-page");
+      document.body.classList.remove("mode-request", "mode-list", "mode-admin", "mode-shop", "auth-page");
       document.documentElement.classList.remove("auth-page");
       if(mode === "request"){
         document.body.classList.add("mode-request");
@@ -1550,6 +1648,7 @@ if(item.img && (!item.images || !item.images[0])){
 
     function renderAuthShell(innerHtml){
       topbar.style.display = "none";
+      setTopbarRightLogo();
       if(topbarLogo) topbarLogo.classList.remove("show");
       document.body.classList.remove("mode-request", "mode-list", "mode-admin");
       document.body.classList.add("auth-page");
@@ -1793,6 +1892,7 @@ if(item.img && (!item.images || !item.images[0])){
 
     async function renderMainHome(){
       topbar.style.display = "none";
+      setTopbarRightLogo();
       if(topbarLogo) topbarLogo.classList.remove("show");
       document.body.classList.remove("mode-request", "mode-list", "mode-admin", "auth-page");
       document.documentElement.classList.remove("auth-page");
@@ -1815,6 +1915,7 @@ if(item.img && (!item.images || !item.images[0])){
                 : `<button class="mainHomeBtn requestDarkBtn" id="goRequestPage" type="button"> 신청하기</button>`
             }
             <button class="mainHomeBtn stockBtn" id="goStockPage" type="button">물품 재고현황</button>
+            <button class="mainHomeBtn shopHomeBtn" id="goShopPage" type="button">제품 구매하기</button>
             <button class="mainHomeBtn logoutBtn" id="logoutBtn" type="button">로그아웃</button>
           </div>
         </div>
@@ -1834,6 +1935,10 @@ if(item.img && (!item.images || !item.images[0])){
         location.hash = "#/list";
       });
 
+      document.getElementById("goShopPage")?.addEventListener("click", ()=>{
+        location.hash = "#/shop";
+      });
+
       document.getElementById("logoutBtn")?.addEventListener("click", logoutHome);
 
       document.getElementById("mainHomeLogoBtn")?.addEventListener("click", ()=>{
@@ -1844,17 +1949,70 @@ if(item.img && (!item.images || !item.images[0])){
     }
 
 
+    function getShopItems(){
+      const section = data.find(sec => sec.category === "기타");
+      return section ? (section.items || []) : [];
+    }
+
+    function getShopItemById(id){
+      return getShopItems().find(it => String(it.id) === String(id)) || null;
+    }
+
+    const SHOP_CART_KEY = "sa_shop_cart_v1";
+
+    function getShopCart(){
+      try{
+        const parsed = JSON.parse(localStorage.getItem(SHOP_CART_KEY) || "[]");
+        return Array.isArray(parsed) ? parsed : [];
+      }catch(e){
+        return [];
+      }
+    }
+
+    function saveShopCart(cart){
+      localStorage.setItem(SHOP_CART_KEY, JSON.stringify(cart || []));
+    }
+
+    function parsePrice(v){
+      return Number(String(v || "0").replace(/[^0-9]/g, "")) || 0;
+    }
+
+    function formatPrice(v){
+      return `${Number(v || 0).toLocaleString()}`;
+    }
+
+    function getShopColorLabel(it){
+      const n = String(it?.name || "");
+      if(n.includes("(B)") || n.includes("Black") || n.includes("블랙")) return "Black";
+      if(n.includes("(W)") || n.includes("White") || n.includes("화이트")) return "White";
+      if(n.includes("가방")) return "Black";
+      return "-";
+    }
+
+    function addShopCart(itemId, qty=1){
+      const item = getShopItemById(itemId);
+      if(!item) return;
+      const cart = getShopCart();
+      const found = cart.find(row => row.id === itemId);
+      if(found){
+        found.qty = Number(found.qty || 0) + qty;
+      }else{
+        cart.push({ id:itemId, qty });
+      }
+      saveShopCart(cart);
+    }
+
     function renderShopSection(section){
       return `
         <section class="shopSection">
           <div class="shopInner">
             <div class="shopHead">
               <h2 class="shopTitle">SHOP</h2>
-              <a class="shopLink" href="javascript:void(0)">제품 구매하기 <span>▶</span></a>
+              <button class="shopLink" type="button" data-go-shop>제품 구매하기 <span>▶</span></button>
             </div>
             <div class="shopGrid">
             ${(section.items || []).map(it => `
-              <button class="shopCard" type="button" data-open="${escapeAttr(it.id)}" data-name="${escapeAttr(it.name || '')}">
+              <button class="shopCard" type="button" data-shop-open="${escapeAttr(it.id)}" data-name="${escapeAttr(it.name || '')}">
                 <div class="shopThumb">
                   ${it.img ? renderSmartImage(it.img, it.name) : iconPlaceholder()}
                 </div>
@@ -1870,10 +2028,212 @@ if(item.img && (!item.images || !item.images[0])){
       `;
     }
 
+    function prepareShopPage(title="제품 구매하기"){
+      topbar.style.display = "flex";
+      searchBox.style.display = "flex";
+      setTopbarRightLogo();
+      if(topbarLogo) topbarLogo.classList.remove("show");
+      topbar.classList.remove("no-search");
+      setBodyMode("request");
+      document.body.classList.add("mode-shop");
+      setTopbarTitleLogo();
+    }
+
+    function renderShopPageHeader(title="제품 | Product", active="list"){
+      const cartCount = getShopCart().reduce((sum, row)=>sum + Number(row.qty || 0), 0);
+      return `
+        <div class="shopPageHead">
+          <div class="shopPageTitle"><strong>제품</strong><span>|</span><em>Product</em></div>
+          <div class="shopPageIcons">
+            <button class="shopIconBtn ${active === 'account' ? 'active' : ''}" type="button" data-shop-account title="마이페이지" aria-label="마이페이지">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12.2c2.25 0 4.05-1.86 4.05-4.15C16.05 5.78 14.25 4 12 4S7.95 5.78 7.95 8.05c0 2.29 1.8 4.15 4.05 4.15Z"/><path d="M5.8 21c.62-3.72 2.98-5.8 6.2-5.8s5.58 2.08 6.2 5.8"/></svg>
+            </button>
+            <button class="shopIconBtn ${active === 'cart' ? 'active' : ''}" type="button" data-shop-cart title="장바구니" aria-label="장바구니">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 8.5h9.6l.9 11H6.3l.9-11Z"/><path d="M9.2 8.5V7.1A2.8 2.8 0 0 1 12 4.3a2.8 2.8 0 0 1 2.8 2.8v1.4"/></svg>${cartCount ? `<span>${cartCount}</span>` : ``}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderShopListPage(){
+      prepareShopPage("제품 구매하기");
+      const shopKeyword = String(q?.value || "").trim().toLowerCase();
+      const items = getShopItems().filter(it => {
+        if(!shopKeyword) return true;
+        const target = `${it.name || ""} ${it.price || ""} ${getShopColorLabel(it) || ""}`.toLowerCase();
+        return target.includes(shopKeyword);
+      });
+      app.innerHTML = `
+        <div class="shopPage">
+          ${renderShopPageHeader("제품 | Product", "list")}
+          <div class="shopProductGrid">
+            ${items.length ? items.map((it, idx) => `
+              <button class="shopProductCard ${idx === 3 ? 'is-ready' : ''}" type="button" data-shop-open="${escapeAttr(it.id)}">
+                <div class="shopProductThumb">
+                  ${idx === 3 ? `<div class="shopReadyIcon">▢</div>` : (it.img ? renderSmartImage(it.img, it.name) : iconPlaceholder())}
+                </div>
+                <div class="shopProductInfo">
+                  <div class="shopProductName">${idx === 3 ? '상품 준비중' : escapeHtml(String(it.name || '').replace('(B)','').replace('(W)',''))}</div>
+                  <div class="shopProductColor">${idx === 3 ? '-' : escapeHtml(getShopColorLabel(it))}</div>
+                  <div class="shopProductPrice">${idx === 3 ? '-' : escapeHtml(formatPrice(parsePrice(it.price)))}</div>
+                </div>
+              </button>
+            `).join("") : `<div class="shopEmptyResult">검색 결과가 없습니다.</div>`}
+          </div>
+        </div>
+      `;
+      bindShopCommonEvents();
+    }
+
+    function renderShopAccountPage(){
+      prepareShopPage("마이페이지");
+      app.innerHTML = `
+        <div class="shopPage shopAccountPage">
+          ${renderShopPageHeader("제품 | Product", "account")}
+          <div class="shopAccountPanel">
+            <div class="shopAccountIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 12.2c2.25 0 4.05-1.86 4.05-4.15C16.05 5.78 14.25 4 12 4S7.95 5.78 7.95 8.05c0 2.29 1.8 4.15 4.05 4.15Z"/><path d="M5.8 21c.62-3.72 2.98-5.8 6.2-5.8s5.58 2.08 6.2 5.8"/></svg>
+            </div>
+            <div class="shopAccountTitle">MY PAGE</div>
+            <div class="shopAccountSub">제품 구매 내역과 장바구니를 확인할 수 있습니다.</div>
+            <div class="shopAccountMenu">
+              <button type="button" data-shop-cart>장바구니</button>
+              <button type="button" data-shop-home>제품 목록</button>
+            </div>
+          </div>
+        </div>
+      `;
+      bindShopCommonEvents();
+    }
+
+    function renderShopDetailPage(itemId){
+      const it = getShopItemById(itemId);
+      prepareShopPage("제품 구매하기");
+      if(!it){
+        app.innerHTML = `<div class="paper"><div class="paper-body">제품을 찾을 수 없습니다.</div></div>`;
+        return;
+      }
+      app.innerHTML = `
+        <div class="shopPage shopDetailPage">
+          ${renderShopPageHeader("제품 | Product", "detail")}
+          <div class="shopDetailHero">
+            <div class="shopDetailImg">${it.img ? renderSmartImage(it.img, it.name) : iconPlaceholder()}</div>
+            <div class="shopDetailInfo">
+              <div>
+                <div class="shopDetailName">${escapeHtml(String(it.name || '').replace('(B)','').replace('(W)',''))}</div>
+                <div class="shopDetailColor">${escapeHtml(getShopColorLabel(it))}</div>
+              </div>
+              <div class="shopDetailPrice">${escapeHtml(formatPrice(parsePrice(it.price)))}</div>
+            </div>
+            <select class="shopOptionSelect" id="shopColorOption">
+              <option>${escapeHtml(getShopColorLabel(it))}</option>
+            </select>
+            <div class="shopDetailActions">
+              <button class="shopBuyBtn" type="button" id="shopBuyNow">BUY NOW</button>
+              <button class="shopCartBtn" type="button" id="shopAddCart">+ CART</button>
+            </div>
+            <div class="shopDetailsBlock">
+              <div class="shopDetailsTitle">DETAILS</div>
+              <div class="shopDetailsText">${escapeHtml(getShopColorLabel(it))}</div>
+            </div>
+          </div>
+        </div>
+      `;
+      bindShopCommonEvents();
+      document.getElementById("shopAddCart")?.addEventListener("click", ()=>{
+        addShopCart(it.id, 1);
+        alert("장바구니에 담았습니다.");
+        renderShopDetailPage(it.id);
+      });
+      document.getElementById("shopBuyNow")?.addEventListener("click", ()=>{
+        addShopCart(it.id, 1);
+        location.hash = "#/shop/cart";
+      });
+    }
+
+    function renderShopCartPage(){
+      prepareShopPage("제품 구매하기");
+      const cart = getShopCart();
+      const rows = cart.map(row => ({ ...row, item:getShopItemById(row.id) })).filter(row => row.item);
+      const total = rows.reduce((sum,row)=>sum + parsePrice(row.item.price) * Number(row.qty || 0), 0);
+      app.innerHTML = `
+        <div class="shopPage shopCartPage">
+          ${renderShopPageHeader("장바구니", "cart")}
+          <div class="shopCartList">
+            ${rows.length ? rows.map(row => {
+              const it = row.item;
+              const qty = Number(row.qty || 0);
+              const lineTotal = parsePrice(it.price) * qty;
+              return `
+                <div class="shopCartRow" data-cart-id="${escapeAttr(it.id)}">
+                  <button class="shopCartRemove" type="button" data-cart-remove="${escapeAttr(it.id)}">×</button>
+                  <div class="shopCartThumb">${it.img ? renderSmartImage(it.img, it.name) : iconPlaceholder()}</div>
+                  <div class="shopCartInfo">
+                    <div class="shopCartName">${escapeHtml(String(it.name || '').replace('(B)','').replace('(W)',''))}</div>
+                    <div class="shopCartColor">${escapeHtml(getShopColorLabel(it))}</div>
+                    <div class="shopQtyControl">
+                      <button type="button" data-cart-minus="${escapeAttr(it.id)}">-</button>
+                      <span>${qty}</span>
+                      <button type="button" data-cart-plus="${escapeAttr(it.id)}">+</button>
+                    </div>
+                    <div class="shopCartUnit">${escapeHtml(formatPrice(parsePrice(it.price)))}</div>
+                  </div>
+                  <div class="shopCartPrice">${escapeHtml(formatPrice(lineTotal))}</div>
+                </div>
+              `;
+            }).join("") : `<div class="shopCartEmpty">장바구니가 비어 있습니다.</div>`}
+          </div>
+          ${rows.length ? `<button class="shopOrderBtn" type="button" id="shopOrderBtn">ORDER</button>` : ``}
+        </div>
+      `;
+      bindShopCommonEvents();
+      app.querySelectorAll("[data-cart-remove]").forEach(btn => btn.addEventListener("click", ()=>{
+        saveShopCart(getShopCart().filter(row => row.id !== btn.dataset.cartRemove));
+        renderShopCartPage();
+      }));
+      app.querySelectorAll("[data-cart-minus]").forEach(btn => btn.addEventListener("click", ()=>{
+        const cart = getShopCart();
+        const row = cart.find(r => r.id === btn.dataset.cartMinus);
+        if(row) row.qty = Math.max(1, Number(row.qty || 1) - 1);
+        saveShopCart(cart);
+        renderShopCartPage();
+      }));
+      app.querySelectorAll("[data-cart-plus]").forEach(btn => btn.addEventListener("click", ()=>{
+        const cart = getShopCart();
+        const row = cart.find(r => r.id === btn.dataset.cartPlus);
+        if(row) row.qty = Number(row.qty || 1) + 1;
+        saveShopCart(cart);
+        renderShopCartPage();
+      }));
+      document.getElementById("shopOrderBtn")?.addEventListener("click", ()=>{
+        alert("주문 기능은 다음 단계에서 연결하면 됩니다.");
+      });
+    }
+
+    function bindShopCommonEvents(){
+      app.querySelectorAll("[data-shop-open]").forEach(btn => {
+        btn.addEventListener("click", ()=>{
+          if(btn.classList.contains("is-ready")) return;
+          location.hash = `#/shop/item/${btn.dataset.shopOpen}`;
+        });
+      });
+      app.querySelectorAll("[data-go-shop], [data-shop-home]").forEach(btn => {
+        btn.addEventListener("click", ()=>{ location.hash = "#/shop"; });
+      });
+      app.querySelectorAll("[data-shop-cart]").forEach(btn => {
+        btn.addEventListener("click", ()=>{ location.hash = "#/shop/cart"; });
+      });
+      app.querySelectorAll("[data-shop-account]").forEach(btn => {
+        btn.addEventListener("click", ()=>{ location.hash = "#/shop/account"; });
+      });
+    }
+
     function renderHome(mode = "request"){
       applyCustomItemOrder();
       topbar.style.display = "flex";
       searchBox.style.display = "flex";
+      setTopbarRightLogo();
       if(topbarLogo) topbarLogo.classList.remove("show");
       updateTopbarLogo();
       setTopTitleByMode(mode);
@@ -1914,21 +2274,22 @@ if(item.img && (!item.images || !item.images[0])){
                     ${filtered.map(it => {
                       const stock = calcStock(it);
                       return `
-                        <div class="row ${it.name === "와인박스(1구)" ? "wineboxGap" : ""}">
-                          <div class="card" role="button" tabindex="0" data-open="${escapeAttr(it.id)}">
-                            <div class="thumb">
+                        <div class="row stockStatusRow ${it.name === "와인박스(1구)" ? "wineboxGap" : ""}">
+                          <div class="card stockStatusCard" role="button" tabindex="0" data-open="${escapeAttr(it.id)}">
+                            <div class="thumb stockStatusThumb">
                               ${it.img ? renderSmartImage(it.img, it.name) : iconPlaceholder()}
                             </div>
 
-                            <div class="meta">
+                            <div class="meta stockStatusMeta">
                               <div class="meta-top">
-                                <div class="title">${escapeHtml(it.name)}</div>
-                                <div class="size">${escapeHtml(it.size || "")}</div>
+                                <div class="title stockStatusTitle">${escapeHtml(it.name)}</div>
+                                <div class="size stockStatusSize">${escapeHtml(it.size || "")}</div>
                               </div>
+                              <div class="stockStatusSub">대기 없음 · +0</div>
                             </div>
                           </div>
 
-                          <div class="stock">
+                          <div class="stock stockStatusQty">
                             ${Number.isFinite(stock) ? `${stock.toLocaleString()}<small>개</small>` : `-`}
                           </div>
                         </div>
@@ -1990,13 +2351,15 @@ if(item.img && (!item.images || !item.images[0])){
         `;
       }).join("");
 
-      const catalogMenuHtml = showCatalogMenu ? renderCatalogMenu() : "";
+      const catalogMenuHtml = showCatalogMenu ? (isStockMode ? renderStockCatalogSummary() : renderCatalogMenu()) : "";
       app.innerHTML = (catalogMenuHtml + sectionsHtml) || `
         <div class="paper">
           <div class="paper-head">안내</div>
           <div class="paper-body">등록된 품목이 없습니다.</div>
         </div>
       `;
+
+      bindShopCommonEvents();
 
       const sectionAddItemBtn = document.getElementById("sectionAddItemBtn");
       if(sectionAddItemBtn){
@@ -2029,7 +2392,8 @@ if(item.img && (!item.images || !item.images[0])){
 function renderCatalogDetail(catalogId){
       topbar.style.display = "flex";
       searchBox.style.display = "none";
-      if(topbarLogo) topbarLogo.classList.remove("show");
+      setTopbarRightSearch();
+      if(topbarLogo) topbarLogo.classList.add("show");
       updateTopbarLogo();
       setTopTitleByMode("request");
       setBodyMode("request");
@@ -2435,7 +2799,8 @@ function renderCatalogDetail(catalogId){
 function renderCatalogApplyPage(catalogId){
       topbar.style.display = "flex";
       searchBox.style.display = "none";
-      if(topbarLogo) topbarLogo.classList.remove("show");
+      setTopbarRightSearch();
+      if(topbarLogo) topbarLogo.classList.add("show");
       updateTopbarLogo();
       setTopTitleByMode("request");
       setBodyMode("request");
@@ -2566,6 +2931,7 @@ function renderCatalogApplyPage(catalogId){
     function renderDetail(id, mode = "request"){
       topbar.style.display = "flex";
       searchBox.style.display = "none";
+      setTopbarRightLogo();
       if(topbarLogo) topbarLogo.classList.toggle("show", mode === "admin");
       updateTopbarLogo();
       setTopTitleByMode(mode);
@@ -2586,7 +2952,7 @@ function renderCatalogApplyPage(catalogId){
 
       const { section, it } = found;
       if(isRequest && section?.category === "기타"){
-        topTitle.textContent = "제품 구매하기";
+        setTopbarTitleLogo();
       }
       ensureLogs(it);
       ensureRequests(it);
@@ -3257,7 +3623,9 @@ const detailImagesHtml = detailImages.length
         || hash === "#/admin"
         || /^#\/admin\//.test(hash)
         || hash === "#/list"
-        || /^#\/list\//.test(hash);
+        || /^#\/list\//.test(hash)
+        || hash === "#/shop"
+        || /^#\/shop\//.test(hash);
 
     }
 
@@ -3272,6 +3640,7 @@ const detailImagesHtml = detailImages.length
         return;
       }
 
+      const shopItem = hash.match(/^#\/shop\/item\/(.+)$/);
       const requestItem = hash.match(/^#\/request\/item\/(.+)$/);
       const requestCatalogApply = hash.match(/^#\/request\/catalog\/([^/]+)\/apply$/);
       const requestCatalog = hash.match(/^#\/request\/catalog\/([^/]+)$/);
@@ -3286,6 +3655,14 @@ const detailImagesHtml = detailImages.length
         renderResetPasswordPage();
       }else if(hash === "#/" || hash === ""){
         await renderMainHome();
+      }else if(hash === "#/shop"){
+        renderShopListPage();
+      }else if(hash === "#/shop/account"){
+        renderShopAccountPage();
+      }else if(hash === "#/shop/cart"){
+        renderShopCartPage();
+      }else if(shopItem){
+        renderShopDetailPage(decodeURIComponent(shopItem[1]));
       }else if(hash === "#/request"){
         renderHome("request");
       }else if(requestCatalogApply){
@@ -3469,15 +3846,23 @@ const detailImagesHtml = detailImages.length
         renderHome("admin");
       }else if(hash === "#/list"){
         renderHome("list");
+      }else if(hash === "#/shop"){
+        renderShopListPage();
+      }else if(hash === "#/shop/account"){
+        renderShopAccountPage();
+      }else if(hash === "#/shop/cart"){
+        renderShopCartPage();
+      }else if(/^#\/shop\/item\//.test(hash)){
+        return;
       }else if(hash === "#/request"){
         renderHome("request");
       }
     });
 
     homeLink?.addEventListener("click", (e)=>{
-      const titleText = (topTitle?.textContent || "").trim();
+      const hash = location.hash || "";
 
-      if(titleText === "도록 신청하기" || titleText === "물품 신청하기" || titleText === "제품 구매하기"){
+      if(hash.startsWith("#/request") || hash.startsWith("#/shop")){
         e.preventDefault();
         if(q) q.value = "";
         location.hash = "#/request";
@@ -3557,3 +3942,396 @@ if(!ok){
 window.addEventListener("error", function(e){
   console.error("JS 에러:", e.message, e.filename, e.lineno, e.colno);
 });
+
+/* ===== Catalogue page redesign override 2026-04-28 / fixed v4 layout ===== */
+
+function __catalogRoundMeta(catalogId, year, round){
+  const id = String(catalogId || "offline-auction");
+  const y = String(year || "");
+  const r = String(round || "");
+
+  if(id === "offline-auction"){
+    if(r.includes("191")) return { round:"191회", title:"제191회 미술품 경매 도록", date:"04/21(화)", image:"images/2604_191.jpg" };
+    if(r.includes("190")) return { round:"190회", title:"제190회 미술품 경매 도록", date:"02/25(수)", image:"images/2602_190.jpg" };
+    if(r.includes("189")) return { round:"189회", title:"제189회 미술품 경매 도록", date:"01/27(화)", image:"images/2601_189.jpg" };
+    return { round:r || "-", title:`${y || "2026"} Major Auction 도록`, date:"", image:"" };
+  }
+
+  if(id === "contemporary-art-auction"){
+    if(r.includes("6")) return { round:"6월 컨템", title:"6월 컨템포러리 아트 세일 도록", date:"06월", image:"images/2603_contem.jpg" };
+    if(r.includes("3")) return { round:"3월 컨템", title:"3월 컨템포러리 아트 세일 도록", date:"03월", image:"images/2603_contem.jpg" };
+    return { round:r || "-", title:`${y || "2026"} Contemporary Art Sale 도록`, date:"", image:"images/2603_contem.jpg" };
+  }
+
+  if(id === "zero-base"){
+    if(r.includes("5")) return { round:"5월 화성", title:"제로베이스 도록", date:"5월", image:"images/2604_191.jpg" };
+    return { round:r || "-", title:`${y || "2026"} Zero Base 도록`, date:"", image:"images/2604_191.jpg" };
+  }
+
+  return { round:r || "-", title:"도록", date:"", image:"" };
+}
+
+function __catalogYearResults(catalogId, year, round){
+  const config = getUnifiedCatalogConfig(catalogId);
+  const rounds = Array.isArray(config?.data?.[year]) ? config.data[year] : [];
+
+  if(round){
+    return [__catalogRoundMeta(catalogId, year, round)].filter(x => x && x.image);
+  }
+
+  return rounds
+    .map(r => __catalogRoundMeta(catalogId, year, r))
+    .filter(x => x && x.image);
+}
+
+function __goCatalogWholeSection(){
+  location.hash = "#/request";
+  setTimeout(() => {
+    const el = document.querySelector(".catalogMenuSection");
+    if(el){
+      el.scrollIntoView({ behavior:"smooth", block:"start" });
+    }
+  }, 180);
+}
+
+function renderCatalogDetail(catalogId){
+  topbar.style.display = "flex";
+  searchBox.style.display = "none";
+  setTopbarRightSearch();
+  if(topbarLogo) topbarLogo.classList.add("show");
+  updateTopbarLogo();
+  setTopTitleByMode("request");
+  setBodyMode("request");
+
+  const config = getUnifiedCatalogConfig(catalogId);
+  if(!config){
+    app.innerHTML = `<div class="paper"><div class="paper-head">알림</div><div class="paper-body">페이지를 찾을 수 없습니다.</div></div>`;
+    return;
+  }
+
+  const allDepts = ["경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
+  let reqDateFilter = "";
+  let reqDeptFilter = "전체";
+  let reqStatusFilter = "전체";
+  let selectedRequestKeys = new Set();
+  let viewMode = sessionStorage.getItem(`catalog_view_${catalogId}`) || "gallery";
+
+  function getRequestRows(){
+    let rows = [...getCatalogRequests(catalogId)];
+    if(reqDateFilter) rows = rows.filter(r => toISODateLike(r.d) === reqDateFilter);
+    if(reqDeptFilter !== "전체") rows = rows.filter(r => (r.dept || "-") === reqDeptFilter);
+    if(reqStatusFilter === "전체") rows = rows.filter(r => (r.status || "pending") !== "approved");
+    else rows = rows.filter(r => (r.status || "pending") === reqStatusFilter);
+    return sortByLatestDateAndKey(rows);
+  }
+
+  function tableRows(rows){
+    if(rows.length === 0) return `<div class="logEmpty">내역이 없습니다.</div>`;
+    return rows.map(r => {
+      const key = r.__key;
+      const selected = selectedRequestKeys.has(key);
+      const statusText = requestStatusLabel(r.status);
+      const statusClassName = requestStatusClass(r.status);
+      return `
+        <div class="logRow clickable ${selected ? "selected" : ""}" data-row="${escapeAttr(key)}" data-kind="request">
+          <div class="logDate">${escapeHtml(formatKRDate(r.d))}</div>
+          <div class="logType"><span class="typeBadge request">${escapeHtml(r.t || "신청")}</span></div>
+          <div class="logDept">${escapeHtml(r.dept || "-")}</div>
+          <div class="logType"><span class="typeBadge ${statusClassName}">${escapeHtml(statusText)}</span></div>
+          <div class="logPerson">${escapeHtml(r.person || "-")}</div>
+          <div class="logQty">${Number(r.qty || 0).toLocaleString()}개</div>
+        </div>`;
+    }).join("");
+  }
+
+  function resultCards(year, round){
+    const results = __catalogYearResults(catalogId, year, round);
+    const isRoundSelected = !!round;
+
+    if(!year){
+      return `<div class="catalogEmptyResult">연도를 선택한 뒤 검색해주세요.</div>`;
+    }
+
+    if(!results.length){
+      return `<div class="catalogEmptyResult">해당 연도에 등록된 도록 이미지가 없습니다.</div>`;
+    }
+
+    if(isRoundSelected){
+      const meta = results[0];
+      return `
+        <div class="catalogRoundDetailLayout">
+          <div class="catalogRoundInfo">
+            <div class="catalogYearBadge">${escapeHtml(year)}</div>
+            <h3 class="catalogRoundTitle">${escapeHtml(meta.title || "")}</h3>
+            <p class="catalogRoundDate">${escapeHtml(meta.date || meta.round || "")}</p>
+            <button class="catalogRoundApplyBtn" type="button" data-result-round="${escapeAttr(meta.round || "")}">신청하기</button>
+          </div>
+
+          <button class="catalogRoundImageBtn" type="button" data-result-round="${escapeAttr(meta.round || "")}">
+            <div class="catalogRoundImage">${renderSmartImage(meta.image, meta.title)}</div>
+          </button>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="catalogResultGrid yearOnly">
+        ${results.map(meta => `
+          <button class="catalogResultCard yearOnlyCard" type="button" data-result-round="${escapeAttr(meta.round || "")}">
+            <div class="catalogResultCardImg">${renderSmartImage(meta.image, meta.title)}</div>
+          </button>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  function render(){
+    const selected = getCatalogApplySelection(catalogId);
+    const yearList = Object.keys(config.data || {});
+    const currentYear = selected?.year || "";
+    const roundList = Array.isArray(config.data?.[currentYear]) ? config.data[currentYear] : [];
+    const currentRound = selected?.round || "";
+    const activeRound = roundList.includes(currentRound) ? currentRound : "";
+    const requestRows = getRequestRows();
+    const isRoundSelected = viewMode === "result" && !!activeRound;
+
+    const galleryImages = Array.isArray(config.galleryImages) && config.galleryImages.length
+      ? config.galleryImages
+      : ["images/2601_189.jpg","images/2602_190.jpg","images/2603_contem.jpg","images/2604_191.jpg"];
+
+    const galleryHtml = Array.from({ length: 12 }, (_, idx) => {
+      const imagePath = galleryImages[idx % galleryImages.length] || "";
+      return `<button class="catalogGalleryItem" type="button" data-catalog-cover="${idx}">${imagePath ? renderSmartImage(imagePath, `${config.title || "Catalog"} ${idx + 1}`) : `<div class="catalogGalleryPlaceholder">IMAGE</div>`}</button>`;
+    }).join("");
+
+    const yearOptions = [
+      `<option value="">연도</option>`,
+      ...yearList.map(year => `<option value="${escapeAttr(year)}" ${currentYear === year ? "selected" : ""}>${escapeHtml(year)}</option>`)
+    ].join("");
+
+    const roundOptions = [
+      `<option value="">-</option>`,
+      ...roundList.map(round => `<option value="${escapeAttr(round)}" ${activeRound === round ? "selected" : ""}>${escapeHtml(round)}</option>`)
+    ].join("");
+
+    app.innerHTML = `
+      <div class="paper detailPaper requestDetailPaper"></div>
+      <div class="paper-body detailPaperBody">
+        <div class="catalogDetailPage">
+          <div class="catalogDetailTop">
+            <button class="catalogDetailTitle catalogWholeBackBtn" type="button" id="catalogWholeBackBtn">
+              <span class="catalogTitleKr">도록</span><span class="catalogTitleDivider">|</span><span class="catalogTitleEn">Catalogue</span>
+            </button>
+          </div>
+
+          <div class="catalogControlLabel">선택</div>
+          <div class="catalogDetailControlRow">
+            <div class="catalogSelectWrap"><select class="catalogSelect" id="catalogTypeSelect">${(config.typeOptions || getUnifiedCatalogOptions()).map(opt => `<option value="${escapeAttr(opt.id)}" ${String(config.id || "") === String(opt.id) ? "selected" : ""}>${escapeHtml(opt.label)}</option>`).join("")}</select><span class="catalogSelectArrow">▼</span></div>
+            <div class="catalogSelectWrap"><select class="catalogSelect" id="catalogYearSelect">${yearOptions}</select><span class="catalogSelectArrow">▼</span></div>
+            <div class="catalogSelectWrap"><select class="catalogSelect" id="catalogRoundSelect">${roundOptions}</select><span class="catalogSelectArrow">▼</span></div>
+            <div class="catalogDetailAction"><button class="catalogDetailSubmit" id="catalogSearchBtn" type="button">검색하기</button></div>
+          </div>
+
+          ${viewMode === "result" ? `
+            <div class="catalogResultView">
+              ${resultCards(currentYear, activeRound)}
+            </div>` : `
+            <div class="catalogGalleryGrid catalogGridView">${galleryHtml}</div>`}
+        </div>
+
+        ${isRoundSelected ? `
+        <div class="detailSectionBlock">
+          <div class="boxTitleRow detailSectionHead">
+            <p class="boxTitle">출고 신청 내역</p>
+            <div class="requestAdminActions"><button class="selDelBtn" id="catalogBulkDeleteRequests" type="button">삭제</button></div>
+          </div>
+          <div class="logBox requestLogBox requestTable">
+            <div class="logMinWidth">
+              <div class="logHead subtleHead">
+                <div class="logHeadCell"><div class="logHeadLabel">연도. 월. 일.</div></div>
+                <div class="logHeadCell"><div class="logHeadLabel">구분</div></div>
+                <div class="logHeadCell"><div class="logHeadLabel">전체 부서</div></div>
+                <div class="logHeadCell"><div class="logHeadLabel">전체 상태</div></div>
+                <div class="logHeadCell"><div class="logHeadLabel">담당자</div></div>
+                <div class="logHeadCell"><div class="logHeadLabel">수량</div></div>
+              </div>
+              ${tableRows(requestRows)}
+            </div>
+          </div>
+        </div>` : ``}
+      </div>
+
+      <div class="modal" id="catalogAddModal" aria-hidden="true">
+        <div class="modalOverlay" id="catalogAddOverlay"></div>
+        <div class="sheet" role="dialog" aria-modal="true" aria-label="출고 신청하기">
+          <div class="sheetHead"><div>출고 신청하기</div><button class="sheetClose" id="catalogAddClose">닫기</button></div>
+          <div class="sheetBody">
+            <div class="field"><label for="catalogAddDate">날짜</label><input type="date" id="catalogAddDate"></div>
+            <input type="hidden" id="catalogAddType" value="신청">
+            <div class="field"><label for="catalogAddDept">부서</label><select id="catalogAddDept">${allDepts.map(d => `<option value="${escapeAttr(d)}">${escapeHtml(d)}</option>`).join("")}</select></div>
+            <div class="field"><label for="catalogAddQty">수량</label><input id="catalogAddQty" inputmode="numeric" placeholder="예) 100" /></div>
+            <div class="field"><label for="catalogAddPerson">담당자</label><input id="catalogAddPerson" placeholder="" /></div>
+          </div>
+          <div class="sheetFoot"><button class="btn primary" id="catalogAddBtn">출고 신청하기</button></div>
+        </div>
+      </div>`;
+
+    const typeSelect = app.querySelector("#catalogTypeSelect");
+    const yearSelect = app.querySelector("#catalogYearSelect");
+    const roundSelect = app.querySelector("#catalogRoundSelect");
+    const searchBtn = app.querySelector("#catalogSearchBtn");
+    const catalogAddModal = app.querySelector("#catalogAddModal");
+    const catalogAddOverlay = app.querySelector("#catalogAddOverlay");
+    const catalogAddClose = app.querySelector("#catalogAddClose");
+    const catalogAddBtn = app.querySelector("#catalogAddBtn");
+    const catalogAddDate = app.querySelector("#catalogAddDate");
+
+    function openCatalogRequestModal(){
+      if(!catalogAddModal) return;
+      catalogAddModal.classList.add("show");
+      document.body.style.overflow = "hidden";
+      if(catalogAddDate && !catalogAddDate.value) catalogAddDate.value = new Date().toISOString().slice(0, 10);
+    }
+
+    function closeCatalogRequestModal(){
+      if(!catalogAddModal) return;
+      catalogAddModal.classList.remove("show");
+      document.body.style.overflow = "";
+    }
+
+    app.querySelector("#catalogWholeBackBtn")?.addEventListener("click", __goCatalogWholeSection);
+
+    typeSelect?.addEventListener("change", ()=>{
+      const nextType = typeSelect.value || "offline-auction";
+      sessionStorage.removeItem(`catalog_view_${nextType}`);
+      saveCatalogApplySelection(nextType, { year:"", round:"" });
+      location.hash = `#/request/catalog/${encodeURIComponent(nextType)}`;
+    });
+
+    yearSelect?.addEventListener("change", ()=>{
+      const nextYear = yearSelect.value || "";
+      saveCatalogApplySelection(catalogId, {
+        ...getCatalogApplySelection(catalogId),
+        year: nextYear,
+        round: ""
+      });
+      sessionStorage.setItem(`catalog_view_${catalogId}`, "gallery");
+      viewMode = "gallery";
+      render();
+    });
+
+    roundSelect?.addEventListener("change", ()=>{
+      saveCatalogApplySelection(catalogId, {
+        ...getCatalogApplySelection(catalogId),
+        year: yearSelect?.value || "",
+        round: roundSelect.value || ""
+      });
+    });
+
+    searchBtn?.addEventListener("click", ()=>{
+      const year = yearSelect?.value || "";
+      const round = roundSelect?.value || "";
+      if(!year){
+        alert("연도를 선택해주세요.");
+        return;
+      }
+
+      saveCatalogApplySelection(catalogId, { year, round });
+      sessionStorage.setItem(`catalog_view_${catalogId}`, "result");
+      viewMode = "result";
+      render();
+    });
+
+    app.querySelectorAll("[data-catalog-cover]").forEach(btn => {
+      btn.addEventListener("click", ()=>{
+        const year = yearSelect?.value || currentYear || "2026";
+        const nextRounds = Array.isArray(config.data?.[year]) ? config.data[year] : [];
+        const round = roundSelect?.value || nextRounds[0] || "";
+        saveCatalogApplySelection(catalogId, { year, round });
+        sessionStorage.setItem(`catalog_view_${catalogId}`, "result");
+        viewMode = "result";
+        render();
+      });
+    });
+
+    app.querySelectorAll("[data-result-round]").forEach(btn => {
+      btn.addEventListener("click", ()=>{
+        const year = yearSelect?.value || currentYear || "";
+        const round = btn.dataset.resultRound || "";
+        if(!round) return;
+        saveCatalogApplySelection(catalogId, { year, round, currentStock:Number(config.currentStock || 0) });
+        sessionStorage.setItem(`catalog_view_${catalogId}`, "result");
+        viewMode = "result";
+        render();
+        setTimeout(openCatalogRequestModal, 80);
+      });
+    });
+
+    catalogAddOverlay?.addEventListener("click", closeCatalogRequestModal);
+    catalogAddClose?.addEventListener("click", closeCatalogRequestModal);
+
+    catalogAddBtn?.addEventListener("click", async ()=>{
+      const selectedInfo = getCatalogApplySelection(catalogId);
+      const date = app.querySelector("#catalogAddDate")?.value || "";
+      const dept = app.querySelector("#catalogAddDept")?.value || "";
+      const qty = Number(app.querySelector("#catalogAddQty")?.value || 0);
+      const person = (app.querySelector("#catalogAddPerson")?.value || "").trim();
+      const year = selectedInfo?.year || yearSelect?.value || "";
+      const round = selectedInfo?.round || roundSelect?.value || "";
+
+      if(!date || !dept || !qty || !person){ alert("모든 항목을 입력해주세요."); return; }
+      if(!Number.isFinite(qty) || qty <= 0){ alert("수량은 0보다 큰 숫자로 입력해주세요."); return; }
+
+      const rows = getCatalogRequests(catalogId);
+      const row = normalizeLog({ d: date, t: "신청", dept, person, qty, status:"pending", year, round, currentStock:Number(config.currentStock || 0) });
+
+      try{
+        const inserted = await addCatalogRequestToDB(catalogId, row);
+        if(inserted?.id){
+          row._dbid = inserted.id;
+          row.__key = `catalog_req_${inserted.id}`;
+        }
+        rows.push(row);
+        saveCatalogRequests(catalogId, rows);
+        closeCatalogRequestModal();
+        render();
+        alert("출고 신청이 접수되었습니다.");
+      }catch(err){
+        console.error("도록 신청 DB 저장 실패:", err);
+        alert("DB 저장 중 오류가 발생했습니다.");
+      }
+    });
+
+    app.querySelectorAll('.logRow.clickable[data-kind="request"]').forEach(rowEl => {
+      rowEl.addEventListener("click", ()=>{
+        const key = rowEl.dataset.row;
+        if(selectedRequestKeys.has(key)) selectedRequestKeys.delete(key);
+        else selectedRequestKeys.add(key);
+        rowEl.classList.toggle("selected");
+      });
+    });
+
+    app.querySelector("#catalogBulkDeleteRequests")?.addEventListener("click", async ()=>{
+      if(selectedRequestKeys.size === 0){ alert("삭제할 내역을 선택해주세요."); return; }
+
+      const currentRows = getCatalogRequests(catalogId);
+      const rowsToDelete = currentRows.filter(r => selectedRequestKeys.has(r.__key));
+      const nextRows = currentRows.filter(r => !selectedRequestKeys.has(r.__key));
+
+      try{
+        await deleteCatalogRequestsByKeys(catalogId, rowsToDelete);
+        saveCatalogRequests(catalogId, nextRows);
+        selectedRequestKeys.clear();
+        render();
+      }catch(err){
+        console.error("도록 신청내역 DB 삭제 실패:", err);
+        alert("DB 삭제 중 오류가 발생했습니다.");
+      }
+    });
+  }
+
+  render();
+  syncCatalogRequestsFromDB(catalogId).then((changed)=>{
+    if(changed) render();
+  }).catch(err => console.error("도록 신청내역 DB 동기화 실패:", err));
+}
