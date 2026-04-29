@@ -4116,32 +4116,34 @@ body.mode-request .headerFilterSelect{
 
 
 
-/* ===== 물품재고현황 페이지 디자인 변경 ===== */
+/* ===== 물품재고현황 페이지 디자인 + 클릭 폼 FINAL DIRECT ===== */
+body.mode-list{ background:#fff; }
+
 body.mode-list .wrap{
-  width:min(calc(100% - 32px), 760px);
+  width:min(calc(100% - 32px), 720px) !important;
+  padding:0 0 80px !important;
 }
 
 body.mode-list .topbar{
-  margin-bottom:18px;
-  padding-top:18px;
-  padding-bottom:18px;
+  padding:18px 0 12px !important;
+  margin:0 0 10px !important;
+  min-height:60px !important;
 }
 
-body.mode-list .section{
-  margin-top:24px;
-}
+body.mode-list .section{ margin-top:24px !important; }
 
 body.mode-list .secHead{
-  margin:0 0 18px;
-  padding:0;
+  margin:0 0 18px !important;
+  padding:0 !important;
+  border:0 !important;
 }
 
 body.mode-list .secHead h2{
-  font-size:14px;
-  font-weight:700;
-  color:#222;
-  letter-spacing:-0.03em;
-  text-transform:none;
+  font-size:14px !important;
+  font-weight:800 !important;
+  color:#222 !important;
+  letter-spacing:-0.03em !important;
+  text-transform:none !important;
 }
 
 .stockCatalogSection{
@@ -4150,14 +4152,14 @@ body.mode-list .secHead h2{
   width:100vw;
   margin-left:-50vw;
   background:#f2f2f2;
-  padding:26px 0 22px;
-  margin-bottom:22px;
+  padding:24px 0 20px;
+  margin-top:14px;
+  margin-bottom:24px;
 }
 
-.stockCatalogSection > *{
-  width:min(calc(100% - 32px), 760px);
-  margin-left:auto;
-  margin-right:auto;
+.stockCatalogInner{
+  width:min(calc(100% - 32px), 720px);
+  margin:0 auto;
 }
 
 .stockCatalogHead{
@@ -4176,12 +4178,12 @@ body.mode-list .secHead h2{
 
 .stockCatalogTitle span{
   font-size:15px;
-  font-weight:700;
+  font-weight:800;
 }
 
 .stockCatalogTitle em{
   font-style:normal;
-  font-size:13px;
+  font-size:12px;
   color:#777;
 }
 
@@ -4193,7 +4195,7 @@ body.mode-list .secHead h2{
 
 .stockCatalogRight{
   font-size:14px;
-  font-weight:700;
+  font-weight:800;
   color:#111;
 }
 
@@ -4207,7 +4209,7 @@ body.mode-list .secHead h2{
   min-height:128px;
   border:0;
   background:#fff;
-  padding:17px 12px 12px;
+  padding:17px 10px 12px;
   text-align:center;
   cursor:pointer;
   font-family:inherit;
@@ -4223,7 +4225,7 @@ body.mode-list .secHead h2{
   justify-content:center;
   font-size:13px;
   line-height:1.15;
-  font-weight:800;
+  font-weight:900;
   color:#222;
 }
 
@@ -4251,22 +4253,22 @@ body.mode-list .secHead h2{
 .stockCatalogQty{
   margin-top:auto;
   font-size:15px;
-  font-weight:800;
+  font-weight:900;
   color:#18bfc0;
   line-height:1.2;
 }
 
 body.mode-list .list{
   display:flex !important;
-  flex-direction:column;
-  gap:8px;
+  flex-direction:column !important;
+  gap:8px !important;
 }
 
 body.mode-list .stockStatusRow{
-  display:grid;
+  display:grid !important;
   grid-template-columns:minmax(0, 1fr) 86px !important;
-  gap:0;
-  min-height:62px;
+  gap:0 !important;
+  min-height:62px !important;
 }
 
 body.mode-list .stockStatusCard{
@@ -4287,37 +4289,28 @@ body.mode-list .stockStatusThumb{
   background:#f5f5f5 !important;
 }
 
-body.mode-list .stockStatusMeta{
-  gap:2px !important;
-  justify-content:center;
-}
-
 body.mode-list .stockStatusTitle{
   font-size:13px !important;
   line-height:1.2 !important;
-  font-weight:800 !important;
+  font-weight:900 !important;
   margin-bottom:2px !important;
-  color:#111;
 }
 
 body.mode-list .stockStatusSize{
   font-size:10px !important;
   color:#777 !important;
-  line-height:1.2;
 }
 
 .stockStatusSub{
   font-size:10px;
   color:#4a7bd0;
-  line-height:1.2;
-  font-weight:500;
 }
 
 body.mode-list .stockStatusQty{
   min-height:62px !important;
   padding:0 8px !important;
   font-size:14px !important;
-  font-weight:800 !important;
+  font-weight:900 !important;
   background:#fbfbfb !important;
   border:1px solid #e8e8e8 !important;
   display:flex !important;
@@ -4325,31 +4318,22 @@ body.mode-list .stockStatusQty{
   justify-content:center !important;
 }
 
-body.mode-list .stockStatusQty small{
-  font-size:12px !important;
-  margin-left:2px !important;
-  color:#222 !important;
+.stockCatalogApplyModal.modal{ display:none; }
+.stockCatalogApplyModal.modal.show{ display:block !important; }
+
+/* PATCH: 도록 관리자 신청/입출고 내역 버튼 및 재고 표시 */
+.catalogRoundApplyBtn.adminStockOnly{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  background:#f3f3f3 !important;
+  color:#111 !important;
+  cursor:default !important;
+  border:0;
 }
-
-@media (max-width:640px){
-  body.mode-list .wrap{
-    width:min(calc(100% - 32px), 760px);
-  }
-
-  .stockCatalogSection > *{
-    width:min(calc(100% - 32px), 760px);
-  }
-
-  .stockCatalogCards{
-    gap:12px;
-  }
-
-  .stockCatalogCard{
-    min-height:128px;
-    padding:16px 8px 12px;
-  }
-
-  .stockCatalogCardTitle{
-    font-size:12px;
-  }
-}
+.catalogRoundApplyBtn.adminStockOnly b{font-weight:800;}
+.catalogLogSection{margin-top:34px;}
+.catalogStockBottom{margin-top:22px;}
+.catalogStockBottom .adminBottomLeft{font-size:15px;color:#657085;font-weight:700;}
+.catalogStockBottom .adminBottomLeft b{font-size:16px;margin-left:6px;color:#657085;}
