@@ -775,18 +775,18 @@ const navReload = document.getElementById("navReload");
     }
 
 function renderCatalogMenuImage(item){
-       const map = {
-    "offline-auction": "images/sa-ca-01.png",
-    "contemporary-art-auction": "images/sa-ca-02.png",
-    "zero-base": "images/sa-ca-03.png"
-  };
-
-  const img = map[item.id];
-
-  return `
-    <img src="${img}" alt="${item.label}" class="catalogMenuThumbImg">
-  `;
-}
+      const fixedImages = {
+        "offline-auction": "images/sa-ca-01.png",
+        "contemporary-art-auction": "images/sa-ca-02.png",
+        "zero-base": "images/sa-ca-03.png"
+      };
+      const id = String(item?.id || "");
+      const img = fixedImages[id] || getLatestCatalogHomeImage(id);
+      if(img){
+        return `<img src="${escapeAttr(img)}" alt="${escapeAttr(item?.label || "")}" class="catalogMenuThumbImg">`;
+      }
+      return `<div class="catalogMenuThumbPlaceholder">IMAGE</div>`;
+    }
 
     function renderCatalogMenu(){
       return `
@@ -802,29 +802,57 @@ function renderCatalogMenuImage(item){
             </div>
 
             <div class="catalogMenuGrid">
+              ${getUnifiedCatalogOptions().map(item => `
+                <button class="catalogMenuCard" type="button" data-catalog-open="${escapeAttr(item.id)}">
+                  <div class="catalogMenuThumb">${renderCatalogMenuImage(item)}</div>
+                  <div class="catalogMenuLabel">${escapeHtml(item.id === "zero-base" ? "ZEROBASE" : item.label)}</div>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
-  <button class="catalogMenuCard" type="button" data-catalog-open="offline-auction">
-    <div class="catalogMenuThumb">
-      <img src="images/2601_189.jpg" alt="Major Auction">
-    </div>
-    <div class="catalogMenuLabel">Major Auction</div>
-  </button>
 
-  <button class="catalogMenuCard" type="button" data-catalog-open="contemporary-art-auction">
-    <div class="catalogMenuThumb">
-      <img src="images/2603_contem.jpg" alt="Contemporary Art Sale">
-    </div>
-    <div class="catalogMenuLabel">Contemporary Art Sale</div>
-  </button>
 
-  <button class="catalogMenuCard" type="button" data-catalog-open="zero-base">
-    <div class="catalogMenuThumb">
-      <img src="images/2602_190.jpg" alt="ZEROBASE">
-    </div>
-    <div class="catalogMenuLabel">ZEROBASE</div>
-  </button>
+    function getCatalogPrimaryYearRound(catalogId){
+      const config = getUnifiedCatalogConfig(catalogId);
+      const years = Object.keys(config?.data || {}).sort((a, b) => String(b).localeCompare(String(a)));
+      const year = years.find(y => Array.isArray(config.data?.[y]) && config.data[y].length) || years[0] || "";
+      const round = (Array.isArray(config?.data?.[year]) ? config.data[year][0] : "") || "";
+      return { year, round };
+    }
 
-</div>
+    function getCatalogPendingQty(catalogId){
+      const rows = getCatalogRequests(catalogId);
+      return rows
+        .filter(r => (r.status || "pending") === "pending")
+        .reduce((sum, r) => sum + Number(r.qty || 0), 0);
+    }
+
+    function renderAdminCatalogSummary(){
+      const items = getUnifiedCatalogOptions();
+      return `
+        <div class="adminCatalogHomeSection">
+          <div class="adminCatalogHomeTitle">도록</div>
+          <div class="adminCatalogHomeList">
+            ${items.map(item => {
+              const meta = getCatalogPrimaryYearRound(item.id);
+              const pendingQty = getCatalogPendingQty(item.id);
+              const qtyText = pendingQty > 0 ? `-${pendingQty.toLocaleString()}개` : `0개`;
+              const label = item.id === "zero-base" ? "ZERO BASE" : item.label;
+              return `
+                <button class="adminCatalogHomeRow" type="button" data-catalog-open="${escapeAttr(item.id)}">
+                  <span class="adminCatalogHomeMain">
+                    <strong>${escapeHtml(label)}</strong>
+                    <em>${escapeHtml(meta.year || "-")} ${escapeHtml(meta.round || "")}</em>
+                  </span>
+                  <span class="adminCatalogHomeStatus">출고신청</span>
+                  <span class="adminCatalogHomeQty">${escapeHtml(qtyText)}</span>
+                </button>
+              `;
+            }).join("")}
           </div>
         </div>
       `;
@@ -2446,7 +2474,9 @@ if(item.img && (!item.images || !item.images[0])){
         `;
       }).join("");
 
-      const catalogMenuHtml = showCatalogMenu ? (isStockMode ? renderStockCatalogSummary() : renderCatalogMenu()) : "";
+      const catalogMenuHtml = showCatalogMenu
+        ? (isStockMode ? renderStockCatalogSummary() : (mode === "admin" ? renderAdminCatalogSummary() : renderCatalogMenu()))
+        : "";
       app.innerHTML = (catalogMenuHtml + sectionsHtml) || `
         <div class="paper">
           <div class="paper-head">안내</div>
@@ -4235,6 +4265,7 @@ function renderCatalogDetail(catalogId){
             <div class="catalogGalleryGrid catalogGridView">${galleryHtml}</div>`}
         </div>
 
+        ${isRoundSelected ? `
         <div class="detailSectionBlock">
           <div class="boxTitleRow detailSectionHead">
             <p class="boxTitle">출고 신청 내역</p>
@@ -4253,7 +4284,7 @@ function renderCatalogDetail(catalogId){
               ${tableRows(requestRows)}
             </div>
           </div>
-        </div>
+        </div>` : ``}
       </div>
 
       <div class="modal" id="catalogAddModal" aria-hidden="true">
@@ -4751,6 +4782,7 @@ async function renderCatalogDetail(catalogId){
           ${viewMode === "result" ? `<div class="catalogResultView">${resultCards(currentYear, activeRound)}</div>` : `<div class="catalogGalleryGrid catalogGridView">${galleryHtml}</div>`}
         </div>
 
+        ${isRoundSelected ? `
         <div class="detailSectionBlock">
           <div class="boxTitleRow detailSectionHead">
             <p class="boxTitle">출고 신청 내역</p>
@@ -4788,7 +4820,7 @@ async function renderCatalogDetail(catalogId){
             </div>
           </div>
           <div class="adminBottomRow catalogStockBottom"><div class="adminBottomLeft"><span>기준재고</span> <b>${Number(catalogCurrentStock || 0).toLocaleString()}</b></div><div class="adminBottomRight"></div></div>
-        </div>
+        </div>` : ``}
       </div>
 
       <div class="modal" id="catalogAddModal" aria-hidden="true">
@@ -4864,16 +4896,7 @@ async function renderCatalogDetail(catalogId){
       sessionStorage.setItem(`catalog_view_${catalogId}`, "result");
       viewMode = "result";
       render();
-      if(!isAdmin) setTimeout(() => {
-        const modal = app.querySelector("#catalogAddModal");
-        const dateInput = app.querySelector("#catalogAddDate");
-        if(dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0,10);
-        if(modal){
-          modal.classList.add("show");
-          modal.setAttribute("aria-hidden", "false");
-          document.body.style.overflow = "hidden";
-        }
-      }, 80);
+      if(!isAdmin) setTimeout(openCatalogRequestModal, 80);
     }));
     app.querySelector("#catalogAddOverlay")?.addEventListener("click", closeCatalogRequestModal);
     app.querySelector("#catalogAddClose")?.addEventListener("click", closeCatalogRequestModal);
@@ -4953,38 +4976,3 @@ async function renderCatalogDetail(catalogId){
   render();
   syncCatalogRequestsFromDB(catalogId).then(changed => { if(changed) render(); }).catch(err => console.error("도록 신청내역 DB 동기화 실패:", err));
 }
-
-/* ===== FINAL FIX: 도록 신청 버튼/내역 표시 안정화 ===== */
-(function(){
-  function openCatalogModalNow(){
-    const modal = document.querySelector('#catalogAddModal');
-    const dateInput = document.querySelector('#catalogAddDate');
-    if(dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0,10);
-    if(modal){
-      modal.classList.add('show');
-      modal.setAttribute('aria-hidden','false');
-      document.body.style.overflow = 'hidden';
-      return true;
-    }
-    return false;
-  }
-
-  document.addEventListener('click', function(e){
-    const btn = e.target.closest('.catalogRoundApplyBtn:not(.adminStockOnly)');
-    if(!btn) return;
-    if(!String(location.hash || '').startsWith('#/request/catalog/')) return;
-
-    const round = btn.getAttribute('data-result-round') || '';
-    if(round){
-      const catalogId = decodeURIComponent((location.hash.match(/^#\/request\/catalog\/([^/]+)/) || [,'offline-auction'])[1]);
-      let year = document.querySelector('#catalogYearSelect')?.value || '';
-      try{
-        const saved = getCatalogApplySelection(catalogId) || {};
-        year = year || saved.year || '2026';
-        saveCatalogApplySelection(catalogId, { ...saved, year, round });
-      }catch(_err){}
-    }
-
-    setTimeout(openCatalogModalNow, 0);
-  }, true);
-})();

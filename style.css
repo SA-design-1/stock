@@ -4338,27 +4338,72 @@ body.mode-list .stockStatusQty{
 .catalogStockBottom .adminBottomLeft{font-size:15px;color:#657085;font-weight:700;}
 .catalogStockBottom .adminBottomLeft b{font-size:16px;margin-left:6px;color:#657085;}
 
-/* ===== FINAL FIX: 도록 내역 상시 표시 + 도록명/회차 구분 ===== */
-body.mode-request .catalogLogSection,
-body.mode-request .detailSectionBlock{
-  display:block !important;
+/* 관리자 전용 도록 홈 요약 리스트 */
+.adminCatalogHomeSection{
+  margin:34px 0 22px;
+  width:min(100%, 360px);
 }
-body.mode-request .logDept{
-  flex-direction:column;
-  gap:2px;
-  line-height:1.25;
-}
-body.mode-request .logDept .catalogLogName{
-  font-size:11px;
-  font-weight:700;
+.adminCatalogHomeTitle{
+  margin:0 0 12px;
+  font-size:12px;
+  font-weight:600;
   color:#111;
+  letter-spacing:-0.03em;
 }
-body.mode-request .logDept .catalogLogRound{
+.adminCatalogHomeList{
+  background:#fafafa;
+  border:0;
+  padding:10px 18px;
+}
+.adminCatalogHomeRow{
+  width:100%;
+  min-height:58px;
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto auto;
+  align-items:center;
+  gap:12px;
+  border:0;
+  border-bottom:1px solid #dddddd;
+  background:transparent;
+  padding:10px 0;
+  text-align:left;
+  font-family:inherit;
+  cursor:pointer;
+}
+.adminCatalogHomeRow:last-child{ border-bottom:0; }
+.adminCatalogHomeMain{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  gap:3px;
+}
+.adminCatalogHomeMain strong{
+  font-size:13px;
+  line-height:1.2;
+  font-weight:700;
+  color:#171717;
+  letter-spacing:-0.03em;
+}
+.adminCatalogHomeMain em{
+  font-style:normal;
   font-size:10px;
-  font-weight:500;
+  line-height:1.2;
   color:#777;
+  letter-spacing:-0.02em;
 }
-#catalogAddModal.modal.show,
-#catalogAddModal.show{
-  display:block !important;
+.adminCatalogHomeStatus,
+.adminCatalogHomeQty{
+  font-size:12px;
+  line-height:1;
+  color:#21b7b2;
+  font-weight:600;
+  white-space:nowrap;
+}
+.adminCatalogHomeRow:hover .adminCatalogHomeMain strong{
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+@media (max-width:640px){
+  .adminCatalogHomeSection{ width:100%; margin-top:24px; }
+  .adminCatalogHomeList{ padding:8px 14px; }
 }
