@@ -4338,130 +4338,27 @@ body.mode-list .stockStatusQty{
 .catalogStockBottom .adminBottomLeft{font-size:15px;color:#657085;font-weight:700;}
 .catalogStockBottom .adminBottomLeft b{font-size:16px;margin-left:6px;color:#657085;}
 
-/* ===== PATCH 2026-04-29: 관리자 도록 홈 리스트 + 도록 내역 경매별 분류 ===== */
-.adminCatalogHomeBlock{
-  width:min(100%, 360px);
-  margin:18px 0 28px;
-  background:#f5f5f5;
-  padding:14px 18px 12px;
+/* ===== FINAL FIX: 도록 내역 상시 표시 + 도록명/회차 구분 ===== */
+body.mode-request .catalogLogSection,
+body.mode-request .detailSectionBlock{
+  display:block !important;
 }
-.adminCatalogHomeTitle{
-  font-size:11px;
-  font-weight:700;
-  color:#333;
-  margin:0 0 12px;
-}
-.adminCatalogHomeList{
-  display:flex;
+body.mode-request .logDept{
   flex-direction:column;
-}
-.adminCatalogHomeRow{
-  width:100%;
-  min-height:58px;
-  border:0;
-  border-bottom:1px solid #d7d7d7;
-  background:transparent;
-  padding:9px 0 10px;
-  display:grid;
-  grid-template-columns:minmax(0, 1fr) auto;
-  align-items:center;
-  gap:12px;
-  text-align:left;
-  cursor:pointer;
-  font-family:inherit;
-}
-.adminCatalogHomeRow:last-child{ border-bottom:0; }
-.adminCatalogHomeInfo{ display:flex; flex-direction:column; gap:4px; min-width:0; }
-.adminCatalogHomeInfo strong{
-  font-size:13px;
-  line-height:1.15;
-  color:#222;
-  font-weight:800;
-  letter-spacing:-0.02em;
-}
-.adminCatalogHomeInfo span{
-  font-size:10px;
-  color:#777;
-  line-height:1.1;
-}
-.adminCatalogHomeStatus{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  color:#35c3bd;
-  font-size:12px;
-  font-weight:700;
-  white-space:nowrap;
-}
-.adminCatalogHomeStatus b{
-  color:#35c3bd;
-  font-size:12px;
-  font-weight:800;
-}
-
-.catalogGroupedWrap{
-  margin-top:44px;
-}
-.catalogGroupedBlock{
-  margin:0 0 52px;
-  padding-top:6px;
-}
-.catalogGroupedBlock + .catalogGroupedBlock{
-  border-top:1px solid #e2e2e2;
-  padding-top:34px;
-}
-.catalogGroupedTitle{
-  display:flex;
-  align-items:baseline;
-  gap:10px;
-  margin:0 0 18px;
-}
-.catalogGroupedTitle strong{
-  font-size:18px;
-  font-weight:800;
-  color:#222;
-  letter-spacing:-0.04em;
-}
-.catalogGroupedTitle span{
-  font-size:12px;
-  color:#888;
-  font-weight:500;
-}
-.catalogGroupedTable .logHead,
-.catalogGroupedTable .logRow{
-  grid-template-columns:minmax(112px, .95fr) minmax(82px, .75fr) minmax(120px, .9fr) minmax(120px, .95fr) minmax(110px, .85fr) minmax(110px, .85fr) minmax(90px, .7fr) !important;
-}
-.catalogGroupedTable:not(.requestTable) .logHead,
-.catalogGroupedTable:not(.requestTable) .logRow{
-  grid-template-columns:minmax(112px, .95fr) minmax(82px, .75fr) minmax(120px, .9fr) minmax(120px, .95fr) minmax(110px, .85fr) minmax(90px, .7fr) !important;
-}
-.logCatalogInfo{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  min-height:52px;
-  text-align:center;
   gap:2px;
-  padding:0 10px;
+  line-height:1.25;
 }
-.logCatalogInfo b{
-  font-size:12px;
-  color:#222;
-  font-weight:700;
-  line-height:1.1;
-}
-.logCatalogInfo span{
+body.mode-request .logDept .catalogLogName{
   font-size:11px;
-  color:#666;
-  line-height:1.1;
+  font-weight:700;
+  color:#111;
 }
-
-@media (max-width:640px){
-  .adminCatalogHomeBlock{
-    width:100%;
-    margin-top:14px;
-  }
-  .catalogGroupedTitle strong{ font-size:16px; }
-  .catalogGroupedTable .logMinWidth{ min-width:760px; }
+body.mode-request .logDept .catalogLogRound{
+  font-size:10px;
+  font-weight:500;
+  color:#777;
+}
+#catalogAddModal.modal.show,
+#catalogAddModal.show{
+  display:block !important;
 }

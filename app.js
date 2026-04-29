@@ -2440,7 +2440,7 @@ if(item.img && (!item.images || !item.images[0])){
         `;
       }).join("");
 
-      const catalogMenuHtml = showCatalogMenu ? (isStockMode ? renderStockCatalogSummary() : (mode === "admin" ? renderAdminCatalogSummary() : renderCatalogMenu())) : "";
+      const catalogMenuHtml = showCatalogMenu ? (isStockMode ? renderStockCatalogSummary() : renderCatalogMenu()) : "";
       app.innerHTML = (catalogMenuHtml + sectionsHtml) || `
         <div class="paper">
           <div class="paper-head">안내</div>
@@ -4229,7 +4229,6 @@ function renderCatalogDetail(catalogId){
             <div class="catalogGalleryGrid catalogGridView">${galleryHtml}</div>`}
         </div>
 
-        ${isRoundSelected ? `
         <div class="detailSectionBlock">
           <div class="boxTitleRow detailSectionHead">
             <p class="boxTitle">출고 신청 내역</p>
@@ -4248,7 +4247,7 @@ function renderCatalogDetail(catalogId){
               ${tableRows(requestRows)}
             </div>
           </div>
-        </div>` : ``}
+        </div>
       </div>
 
       <div class="modal" id="catalogAddModal" aria-hidden="true">
@@ -4746,7 +4745,6 @@ async function renderCatalogDetail(catalogId){
           ${viewMode === "result" ? `<div class="catalogResultView">${resultCards(currentYear, activeRound)}</div>` : `<div class="catalogGalleryGrid catalogGridView">${galleryHtml}</div>`}
         </div>
 
-        ${isRoundSelected ? `
         <div class="detailSectionBlock">
           <div class="boxTitleRow detailSectionHead">
             <p class="boxTitle">출고 신청 내역</p>
@@ -4784,7 +4782,7 @@ async function renderCatalogDetail(catalogId){
             </div>
           </div>
           <div class="adminBottomRow catalogStockBottom"><div class="adminBottomLeft"><span>기준재고</span> <b>${Number(catalogCurrentStock || 0).toLocaleString()}</b></div><div class="adminBottomRight"></div></div>
-        </div>` : ``}
+        </div>
       </div>
 
       <div class="modal" id="catalogAddModal" aria-hidden="true">
@@ -4860,7 +4858,16 @@ async function renderCatalogDetail(catalogId){
       sessionStorage.setItem(`catalog_view_${catalogId}`, "result");
       viewMode = "result";
       render();
-      if(!isAdmin) setTimeout(openCatalogRequestModal, 80);
+      if(!isAdmin) setTimeout(() => {
+        const modal = app.querySelector("#catalogAddModal");
+        const dateInput = app.querySelector("#catalogAddDate");
+        if(dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0,10);
+        if(modal){
+          modal.classList.add("show");
+          modal.setAttribute("aria-hidden", "false");
+          document.body.style.overflow = "hidden";
+        }
+      }, 80);
     }));
     app.querySelector("#catalogAddOverlay")?.addEventListener("click", closeCatalogRequestModal);
     app.querySelector("#catalogAddClose")?.addEventListener("click", closeCatalogRequestModal);
@@ -4941,404 +4948,37 @@ async function renderCatalogDetail(catalogId){
   syncCatalogRequestsFromDB(catalogId).then(changed => { if(changed) render(); }).catch(err => console.error("도록 신청내역 DB 동기화 실패:", err));
 }
 
-/* ===== PATCH 2026-04-29: 도록 관리자 홈 목록 + 도록 내역 분류 ===== */
-function __adminCatalogHomeRows(){
-  return [
-    { id:"offline-auction", title:"Major Auction", year:"2026", round:"191회" },
-    { id:"contemporary-art-auction", title:"Contemporary Art Sale", year:"2026", round:"3월" },
-    { id:"zero-base", title:"ZERO BASE", year:"2026", round:"5월 화성" }
-  ];
-}
-
-function __catalogCompositeKey(catalogId, key){ return `${catalogId}::${key}`; }
-
-function __catalogPendingSummary(catalogId){
-  const rows = getCatalogRequests(catalogId) || [];
-  const pending = rows.filter(r => (r.status || "pending") === "pending");
-  return { qty: pending.reduce((sum, r) => sum + Number(r.qty || 0), 0), count: pending.length };
-}
-
-function renderAdminCatalogSummary(){
-  const cards = __adminCatalogHomeRows();
-  return `
-    <div class="adminCatalogHomeBlock">
-      <div class="adminCatalogHomeTitle">도록</div>
-      <div class="adminCatalogHomeList">
-        ${cards.map(card => {
-          const summary = __catalogPendingSummary(card.id);
-          return `
-            <button class="adminCatalogHomeRow" type="button" data-admin-catalog-open="${escapeAttr(card.id)}" data-admin-catalog-year="${escapeAttr(card.year)}" data-admin-catalog-round="${escapeAttr(card.round)}">
-              <div class="adminCatalogHomeInfo">
-                <strong>${escapeHtml(card.title)}</strong>
-                <span>${escapeHtml(card.year)}&nbsp;&nbsp;${escapeHtml(card.round)}</span>
-              </div>
-              <div class="adminCatalogHomeStatus">
-                <span>출고신청</span>
-                <b>-${Number(summary.qty || 0).toLocaleString()}개</b>
-              </div>
-            </button>`;
-        }).join("")}
-      </div>
-    </div>`;
-}
-
-function __bindAdminCatalogSummaryClicks(){
-  document.querySelectorAll("[data-admin-catalog-open]").forEach(btn => {
-    if(btn.dataset.boundAdminCatalog === "1") return;
-    btn.dataset.boundAdminCatalog = "1";
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.adminCatalogOpen;
-      const year = btn.dataset.adminCatalogYear || "2026";
-      const round = btn.dataset.adminCatalogRound || "";
-      saveCatalogApplySelection(id, { year, round });
-      sessionStorage.setItem(`catalog_view_${id}`, "result");
-      location.hash = `#/request/catalog/${encodeURIComponent(id)}`;
-    });
-  });
-}
-
-const __originalRenderHomeForCatalogPatch = renderHome;
-renderHome = function(mode = "request"){
-  __originalRenderHomeForCatalogPatch(mode);
-  if(mode === "admin") __bindAdminCatalogSummaryClicks();
-};
-
-async function renderCatalogDetail(catalogId){
-  topbar.style.display = "flex";
-  searchBox.style.display = "none";
-  setTopbarRightSearch();
-  if(topbarLogo) topbarLogo.classList.add("show");
-  updateTopbarLogo();
-  setTopTitleByMode("request");
-  setBodyMode("request");
-
-  const config = getUnifiedCatalogConfig(catalogId);
-  const isAdmin = await isAdminUser();
-  if(!config){
-    app.innerHTML = `<div class="paper"><div class="paper-head">알림</div><div class="paper-body">페이지를 찾을 수 없습니다.</div></div>`;
-    return;
+/* ===== FINAL FIX: 도록 신청 버튼/내역 표시 안정화 ===== */
+(function(){
+  function openCatalogModalNow(){
+    const modal = document.querySelector('#catalogAddModal');
+    const dateInput = document.querySelector('#catalogAddDate');
+    if(dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0,10);
+    if(modal){
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden','false');
+      document.body.style.overflow = 'hidden';
+      return true;
+    }
+    return false;
   }
 
-  const allDepts = ["경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
-  const catalogGroupIds = ["offline-auction", "contemporary-art-auction", "zero-base"];
-  let selectedRequestKeys = new Set();
-  let selectedLogKeys = new Set();
-  let viewMode = sessionStorage.getItem(`catalog_view_${catalogId}`) || "gallery";
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('.catalogRoundApplyBtn:not(.adminStockOnly)');
+    if(!btn) return;
+    if(!String(location.hash || '').startsWith('#/request/catalog/')) return;
 
-  function rowHtml(rows, kind="request", rowCatalogId=catalogId){
-    if(!rows.length) return `<div class="logEmpty">내역이 없습니다.</div>`;
-    return rows.map(r => {
-      const ckey = __catalogCompositeKey(rowCatalogId, r.__key);
-      const selected = kind === "log" ? selectedLogKeys.has(ckey) : selectedRequestKeys.has(ckey);
-      const type = kind === "log" ? "출고" : "신청";
-      const statusText = requestStatusLabel(r.status);
-      const statusClassName = requestStatusClass(r.status);
-      return `
-        <div class="logRow clickable ${selected ? "selected" : ""}" data-row="${escapeAttr(ckey)}" data-kind="${escapeAttr(kind)}" data-catalog-id="${escapeAttr(rowCatalogId)}" data-raw-key="${escapeAttr(r.__key)}">
-          <div class="logDate">${escapeHtml(formatKRDate(r.d))}</div>
-          <div class="logType"><span class="typeBadge ${kind === "log" ? "out" : "request"}">${escapeHtml(type)}</span></div>
-          <div class="logCatalogInfo"><b>${escapeHtml(r.year || "-")}</b><span>${escapeHtml(r.round || "-")}</span></div>
-          <div class="logDept">${escapeHtml(r.dept || "-")}</div>
-          ${kind === "request" ? `<div class="logType"><span class="typeBadge ${statusClassName}">${escapeHtml(statusText)}</span></div>` : ``}
-          <div class="logPerson">${escapeHtml(r.person || "-")}</div>
-          <div class="logQty">${Number(r.qty || 0).toLocaleString()}개</div>
-        </div>`;
-    }).join("");
-  }
-
-  function resultCards(year, round){
-    const results = __catalogYearResults(catalogId, year, round);
-    if(!year) return `<div class="catalogEmptyResult">연도를 선택한 뒤 검색해주세요.</div>`;
-    if(!results.length) return `<div class="catalogEmptyResult">해당 연도에 등록된 도록 이미지가 없습니다.</div>`;
+    const round = btn.getAttribute('data-result-round') || '';
     if(round){
-      const meta = results[0];
-      return `
-        <div class="catalogRoundDetailLayout">
-          <div class="catalogRoundInfo">
-            <div class="catalogYearBadge">${escapeHtml(year)}</div>
-            <h3 class="catalogRoundTitle">${escapeHtml(meta.title || "")}</h3>
-            <p class="catalogRoundDate">${escapeHtml(meta.date || meta.round || "")}</p>
-            ${isAdmin
-              ? `<div class="catalogRoundApplyBtn adminStockOnly" aria-label="현재재고">현재 재고 : <b data-catalog-current-stock>0</b>부</div>`
-              : `<button class="catalogRoundApplyBtn" type="button" data-result-round="${escapeAttr(meta.round || "")}">신청하기</button>`}
-          </div>
-          <button class="catalogRoundImageBtn" type="button" data-result-round="${escapeAttr(meta.round || "")}">
-            <div class="catalogRoundImage">${renderSmartImage(meta.image, meta.title)}</div>
-          </button>
-        </div>`;
+      const catalogId = decodeURIComponent((location.hash.match(/^#\/request\/catalog\/([^/]+)/) || [,'offline-auction'])[1]);
+      let year = document.querySelector('#catalogYearSelect')?.value || '';
+      try{
+        const saved = getCatalogApplySelection(catalogId) || {};
+        year = year || saved.year || '2026';
+        saveCatalogApplySelection(catalogId, { ...saved, year, round });
+      }catch(_err){}
     }
-    return `<div class="catalogResultGrid yearOnly">${results.map(meta => `
-      <button class="catalogResultCard yearOnlyCard" type="button" data-result-round="${escapeAttr(meta.round || "")}">
-        <div class="catalogResultCardImg">${renderSmartImage(meta.image, meta.title)}</div>
-      </button>`).join("")}</div>`;
-  }
 
-  function render(){
-    const selected = getCatalogApplySelection(catalogId);
-    const yearList = Object.keys(config.data || {});
-    const currentYear = selected?.year || "";
-    const roundList = Array.isArray(config.data?.[currentYear]) ? config.data[currentYear] : [];
-    const currentRound = selected?.round || "";
-    const activeRound = roundList.includes(currentRound) ? currentRound : "";
-    const isRoundSelected = viewMode === "result" && !!activeRound;
-
-    const groupedCatalogs = catalogGroupIds.map(id => {
-      const groupConfig = getUnifiedCatalogConfig(id);
-      const rows = sortByLatestDateAndKey(getCatalogRequests(id));
-      const requestRows = rows.filter(r => (r.status || "pending") !== "approved");
-      const approvedLogRows = rows.filter(r => (r.status || "pending") === "approved").map(r => normalizeLog({ ...r, t:"출고", __key:r.__key }));
-      const baseCatalogStock = Number(groupConfig.currentStock || 0);
-      const approvedOutQty = approvedLogRows.reduce((sum, r) => sum + Number(r.qty || 0), 0);
-      const catalogCurrentStock = Math.max(0, baseCatalogStock - approvedOutQty);
-      return { id, requestRows, approvedLogRows, catalogCurrentStock };
-    });
-    const currentGroup = groupedCatalogs.find(g => g.id === catalogId) || groupedCatalogs[0];
-    const catalogCurrentStock = currentGroup ? currentGroup.catalogCurrentStock : 0;
-
-    const groupedLogsHtml = groupedCatalogs.map(group => `
-      <div class="catalogGroupedBlock" data-catalog-group="${escapeAttr(group.id)}">
-        <div class="catalogGroupedTitle">
-          <strong>${escapeHtml(getCatalogTypeLabel(group.id))}</strong>
-          <span>${escapeHtml(group.id === "offline-auction" ? "Major Auction" : group.id === "contemporary-art-auction" ? "Contemporary Art Sale" : "ZERO BASE")}</span>
-        </div>
-
-        <div class="detailSectionBlock">
-          <div class="boxTitleRow detailSectionHead">
-            <p class="boxTitle">출고 신청 내역</p>
-            <div class="requestAdminActions">
-              ${isAdmin ? `<button class="selDelBtn reqApproveBtn" data-catalog-approve="${escapeAttr(group.id)}" type="button">승인</button><button class="selDelBtn reqRejectBtn" data-catalog-reject="${escapeAttr(group.id)}" type="button">반려</button>` : ``}
-              <button class="selDelBtn" data-catalog-delete-requests="${escapeAttr(group.id)}" type="button">삭제</button>
-            </div>
-          </div>
-          <div class="logBox requestLogBox requestTable catalogGroupedTable">
-            <div class="logMinWidth">
-              <div class="logHead subtleHead">
-                <div class="logHeadCell"><div class="logHeadLabel">연도. 월. 일.</div></div>
-                <div class="logHeadCell"><div class="logHeadLabel">구분</div></div>
-                <div class="logHeadCell"><div class="logHeadLabel">연도/회차</div></div>
-                <div class="logHeadCell"><div class="logHeadLabel">전체 부서</div></div>
-                <div class="logHeadCell"><div class="logHeadLabel">전체 상태</div></div>
-                <div class="logHeadCell"><div class="logHeadLabel">담당자</div></div>
-                <div class="logHeadCell"><div class="logHeadLabel">수량</div></div>
-              </div>
-              ${rowHtml(group.requestRows, "request", group.id)}
-            </div>
-          </div>
-        </div>
-
-        <div class="detailSectionBlock catalogLogSection">
-          <div class="boxTitleRow detailSectionHead"><p class="boxTitle">입출고 내역</p><div class="requestAdminActions">${isAdmin ? `<button class="selDelBtn" data-catalog-delete-logs="${escapeAttr(group.id)}" type="button">삭제</button>` : ``}</div></div>
-          <div class="logBox requestLogBox catalogGroupedTable">
-            <div class="logMinWidth">
-              <div class="logHead subtleHead">
-                <div class="logHeadCell"><div class="logHeadLabel">연도. 월. 일.</div></div>
-                <div class="logHeadCell"><div class="logHeadLabel">전체</div></div>
-                <div class="logHeadCell"><div class="logHeadLabel">연도/회차</div></div>
-                <div class="logHeadCell"><div class="logHeadLabel">전체 부서</div></div>
-                <div class="logHeadCell"><div class="logHeadLabel">담당자</div></div>
-                <div class="logHeadCell"><div class="logHeadLabel">수량</div></div>
-              </div>
-              ${rowHtml(group.approvedLogRows, "log", group.id)}
-            </div>
-          </div>
-          <div class="adminBottomRow catalogStockBottom"><div class="adminBottomLeft"><span>기준재고</span> <b>${Number(group.catalogCurrentStock || 0).toLocaleString()}</b></div><div class="adminBottomRight"></div></div>
-        </div>
-      </div>`).join("");
-
-    const galleryImages = Array.isArray(config.galleryImages) && config.galleryImages.length
-      ? config.galleryImages
-      : ["images/2601_189.jpg","images/2602_190.jpg","images/2603_contem.jpg","images/2604_191.jpg"];
-    const galleryHtml = Array.from({ length: 12 }, (_, idx) => {
-      const imagePath = galleryImages[idx % galleryImages.length] || "";
-      return `<button class="catalogGalleryItem" type="button" data-catalog-cover="${idx}">${imagePath ? renderSmartImage(imagePath, `${config.title || "Catalog"} ${idx + 1}`) : `<div class="catalogGalleryPlaceholder">IMAGE</div>`}</button>`;
-    }).join("");
-    const yearOptions = [`<option value="">연도</option>`, ...yearList.map(year => `<option value="${escapeAttr(year)}" ${currentYear === year ? "selected" : ""}>${escapeHtml(year)}</option>`)].join("");
-    const roundOptions = [`<option value="">-</option>`, ...roundList.map(round => `<option value="${escapeAttr(round)}" ${activeRound === round ? "selected" : ""}>${escapeHtml(round)}</option>`)].join("");
-
-    app.innerHTML = `
-      <div class="paper detailPaper requestDetailPaper"></div>
-      <div class="paper-body detailPaperBody">
-        <div class="catalogDetailPage">
-          <div class="catalogDetailTop">
-            <button class="catalogDetailTitle catalogWholeBackBtn" type="button" id="catalogWholeBackBtn">
-              <span class="catalogTitleKr">도록</span><span class="catalogTitleDivider">|</span><span class="catalogTitleEn">Catalogue</span>
-            </button>
-          </div>
-          <div class="catalogControlLabel">선택</div>
-          <div class="catalogDetailControlRow">
-            <div class="catalogSelectWrap"><select class="catalogSelect" id="catalogTypeSelect">${(config.typeOptions || getUnifiedCatalogOptions()).map(opt => `<option value="${escapeAttr(opt.id)}" ${String(config.id || "") === String(opt.id) ? "selected" : ""}>${escapeHtml(opt.label)}</option>`).join("")}</select><span class="catalogSelectArrow">▼</span></div>
-            <div class="catalogSelectWrap"><select class="catalogSelect" id="catalogYearSelect">${yearOptions}</select><span class="catalogSelectArrow">▼</span></div>
-            <div class="catalogSelectWrap"><select class="catalogSelect" id="catalogRoundSelect">${roundOptions}</select><span class="catalogSelectArrow">▼</span></div>
-            <div class="catalogDetailAction"><button class="catalogDetailSubmit" id="catalogSearchBtn" type="button">검색하기</button></div>
-          </div>
-          ${viewMode === "result" ? `<div class="catalogResultView">${resultCards(currentYear, activeRound)}</div>` : `<div class="catalogGalleryGrid catalogGridView">${galleryHtml}</div>`}
-        </div>
-        <div class="catalogGroupedWrap">${groupedLogsHtml}</div>
-      </div>
-
-      <div class="modal" id="catalogAddModal" aria-hidden="true">
-        <div class="modalOverlay" id="catalogAddOverlay"></div>
-        <div class="sheet" role="dialog" aria-modal="true" aria-label="출고 신청하기">
-          <div class="sheetHead"><div>출고 신청하기</div><button class="sheetClose" id="catalogAddClose">닫기</button></div>
-          <div class="sheetBody">
-            <div class="field"><label>신청 도록</label><input id="catalogAddTitle" readonly></div>
-            <div class="field"><label for="catalogAddDate">날짜</label><input type="date" id="catalogAddDate"></div>
-            <input type="hidden" id="catalogAddType" value="신청">
-            <div class="field"><label for="catalogAddDept">부서</label><select id="catalogAddDept">${allDepts.map(d => `<option value="${escapeAttr(d)}">${escapeHtml(d)}</option>`).join("")}</select></div>
-            <div class="field"><label for="catalogAddQty">수량</label><input id="catalogAddQty" inputmode="numeric" placeholder="예) 100" /></div>
-            <div class="field"><label for="catalogAddPerson">담당자</label><input id="catalogAddPerson" placeholder="" /></div>
-          </div>
-          <div class="sheetFoot"><button class="btn primary" id="catalogAddBtn">출고 신청하기</button></div>
-        </div>
-      </div>`;
-
-    const currentStockEl = app.querySelector("[data-catalog-current-stock]");
-    if(currentStockEl) currentStockEl.textContent = Number(catalogCurrentStock || 0).toLocaleString();
-
-    const typeSelect = app.querySelector("#catalogTypeSelect");
-    const yearSelect = app.querySelector("#catalogYearSelect");
-    const roundSelect = app.querySelector("#catalogRoundSelect");
-    const searchBtn = app.querySelector("#catalogSearchBtn");
-    const catalogAddModal = app.querySelector("#catalogAddModal");
-    const catalogAddDate = app.querySelector("#catalogAddDate");
-    const catalogAddTitle = app.querySelector("#catalogAddTitle");
-
-    function openCatalogRequestModal(){
-      if(isAdmin) return;
-      const info = getCatalogApplySelection(catalogId);
-      const meta = __catalogRoundMeta(catalogId, info.year || currentYear || "", info.round || activeRound || "");
-      if(catalogAddTitle) catalogAddTitle.value = `${getCatalogTypeLabel(catalogId)} / ${info.year || currentYear || "-"} / ${meta.round || info.round || activeRound || "-"}`;
-      catalogAddModal?.classList.add("show");
-      document.body.style.overflow = "hidden";
-      if(catalogAddDate && !catalogAddDate.value) catalogAddDate.value = new Date().toISOString().slice(0, 10);
-    }
-    function closeCatalogRequestModal(){ catalogAddModal?.classList.remove("show"); document.body.style.overflow = ""; }
-
-    app.querySelector("#catalogWholeBackBtn")?.addEventListener("click", __goCatalogWholeSection);
-    typeSelect?.addEventListener("change", ()=>{
-      const nextType = typeSelect.value || "offline-auction";
-      sessionStorage.removeItem(`catalog_view_${nextType}`);
-      saveCatalogApplySelection(nextType, { year:"", round:"" });
-      location.hash = `#/request/catalog/${encodeURIComponent(nextType)}`;
-    });
-    yearSelect?.addEventListener("change", ()=>{
-      saveCatalogApplySelection(catalogId, { ...getCatalogApplySelection(catalogId), year: yearSelect.value || "", round: "" });
-      sessionStorage.setItem(`catalog_view_${catalogId}`, "gallery");
-      viewMode = "gallery";
-      render();
-    });
-    roundSelect?.addEventListener("change", ()=> saveCatalogApplySelection(catalogId, { ...getCatalogApplySelection(catalogId), year: yearSelect?.value || "", round: roundSelect.value || "" }));
-    searchBtn?.addEventListener("click", ()=>{
-      const year = yearSelect?.value || "";
-      const round = roundSelect?.value || "";
-      if(!year){ alert("연도를 선택해주세요."); return; }
-      saveCatalogApplySelection(catalogId, { year, round, currentStock:Number(config.currentStock || 0) });
-      sessionStorage.setItem(`catalog_view_${catalogId}`, "result");
-      viewMode = "result";
-      render();
-    });
-    app.querySelectorAll("[data-catalog-cover]").forEach(btn => btn.addEventListener("click", ()=>{
-      const year = yearSelect?.value || currentYear || "2026";
-      const nextRounds = Array.isArray(config.data?.[year]) ? config.data[year] : [];
-      const round = roundSelect?.value || nextRounds[0] || "";
-      saveCatalogApplySelection(catalogId, { year, round, currentStock:Number(config.currentStock || 0) });
-      sessionStorage.setItem(`catalog_view_${catalogId}`, "result");
-      viewMode = "result";
-      render();
-    }));
-    app.querySelectorAll("[data-result-round]").forEach(btn => btn.addEventListener("click", ()=>{
-      const year = yearSelect?.value || currentYear || "";
-      const round = btn.dataset.resultRound || "";
-      if(!round) return;
-      saveCatalogApplySelection(catalogId, { year, round, currentStock:Number(config.currentStock || 0) });
-      sessionStorage.setItem(`catalog_view_${catalogId}`, "result");
-      viewMode = "result";
-      render();
-      if(!isAdmin) setTimeout(openCatalogRequestModal, 80);
-    }));
-    app.querySelector("#catalogAddOverlay")?.addEventListener("click", closeCatalogRequestModal);
-    app.querySelector("#catalogAddClose")?.addEventListener("click", closeCatalogRequestModal);
-    app.querySelector("#catalogAddBtn")?.addEventListener("click", async ()=>{
-      const selectedInfo = getCatalogApplySelection(catalogId);
-      const date = app.querySelector("#catalogAddDate")?.value || "";
-      const dept = app.querySelector("#catalogAddDept")?.value || "";
-      const qty = Number(app.querySelector("#catalogAddQty")?.value || 0);
-      const person = (app.querySelector("#catalogAddPerson")?.value || "").trim();
-      const year = selectedInfo?.year || yearSelect?.value || "";
-      const round = selectedInfo?.round || roundSelect?.value || "";
-      if(!date || !dept || !qty || !person){ alert("모든 항목을 입력해주세요."); return; }
-      if(!Number.isFinite(qty) || qty <= 0){ alert("수량은 0보다 큰 숫자로 입력해주세요."); return; }
-      const rows = getCatalogRequests(catalogId);
-      const row = normalizeLog({ d: date, t: "신청", dept, person, qty, status:"pending", year, round, currentStock:Number(config.currentStock || 0) });
-      try{
-        const inserted = await addCatalogRequestToDB(catalogId, row);
-        if(inserted?.id){ row._dbid = inserted.id; row.__key = `catalog_req_${inserted.id}`; }
-        rows.push(row);
-        saveCatalogRequests(catalogId, rows);
-        closeCatalogRequestModal();
-        render();
-        alert("출고 신청이 접수되었습니다.");
-      }catch(err){ console.error("도록 신청 DB 저장 실패:", err); alert("DB 저장 중 오류가 발생했습니다."); }
-    });
-
-    app.querySelectorAll(".logRow.clickable").forEach(rowEl => rowEl.addEventListener("click", ()=>{
-      const key = rowEl.dataset.row;
-      const set = rowEl.dataset.kind === "log" ? selectedLogKeys : selectedRequestKeys;
-      if(set.has(key)) set.delete(key); else set.add(key);
-      rowEl.classList.toggle("selected");
-    }));
-
-    app.querySelectorAll("[data-catalog-approve]").forEach(btn => btn.addEventListener("click", async ()=>{
-      const targetCatalogId = btn.dataset.catalogApprove;
-      const currentRows = getCatalogRequests(targetCatalogId);
-      const pendingRows = currentRows.filter(r => selectedRequestKeys.has(__catalogCompositeKey(targetCatalogId, r.__key)) && (r.status || "pending") === "pending");
-      if(!pendingRows.length){ alert("승인할 신청 내역을 선택해주세요."); return; }
-      const approverEmail = await getCurrentUserEmail();
-      try{
-        for(const r of pendingRows) await approveCatalogRequestRow(targetCatalogId, r, approverEmail || "");
-        saveCatalogRequests(targetCatalogId, currentRows);
-        await syncCatalogRequestsFromDB(targetCatalogId);
-        selectedRequestKeys.clear();
-        render();
-      }catch(err){ console.error(err); alert("도록 신청 승인 반영 실패: " + (err?.message || err)); }
-    }));
-    app.querySelectorAll("[data-catalog-reject]").forEach(btn => btn.addEventListener("click", async ()=>{
-      const targetCatalogId = btn.dataset.catalogReject;
-      const currentRows = getCatalogRequests(targetCatalogId);
-      const pendingRows = currentRows.filter(r => selectedRequestKeys.has(__catalogCompositeKey(targetCatalogId, r.__key)) && (r.status || "pending") === "pending");
-      if(!pendingRows.length){ alert("반려할 신청 내역을 선택해주세요."); return; }
-      const approverEmail = await getCurrentUserEmail();
-      try{
-        for(const r of pendingRows) await rejectCatalogRequestRow(r, approverEmail || "");
-        saveCatalogRequests(targetCatalogId, currentRows);
-        await syncCatalogRequestsFromDB(targetCatalogId);
-        selectedRequestKeys.clear();
-        render();
-      }catch(err){ console.error(err); alert("도록 신청 반려 반영 실패: " + (err?.message || err)); }
-    }));
-    app.querySelectorAll("[data-catalog-delete-requests]").forEach(btn => btn.addEventListener("click", async ()=>{
-      const targetCatalogId = btn.dataset.catalogDeleteRequests;
-      const selectedKeys = new Set([...selectedRequestKeys].filter(k => k.startsWith(`${targetCatalogId}::`)).map(k => k.replace(`${targetCatalogId}::`, "")));
-      if(!selectedKeys.size){ alert("삭제할 내역을 선택해주세요."); return; }
-      const currentRows = getCatalogRequests(targetCatalogId);
-      const rowsToDelete = currentRows.filter(r => selectedKeys.has(r.__key));
-      const nextRows = currentRows.filter(r => !selectedKeys.has(r.__key));
-      try{ await deleteCatalogRequestsByKeys(targetCatalogId, rowsToDelete); saveCatalogRequests(targetCatalogId, nextRows); selectedRequestKeys.clear(); render(); }
-      catch(err){ console.error(err); alert("DB 삭제 중 오류가 발생했습니다."); }
-    }));
-    app.querySelectorAll("[data-catalog-delete-logs]").forEach(btn => btn.addEventListener("click", async ()=>{
-      const targetCatalogId = btn.dataset.catalogDeleteLogs;
-      const selectedKeys = new Set([...selectedLogKeys].filter(k => k.startsWith(`${targetCatalogId}::`)).map(k => k.replace(`${targetCatalogId}::`, "")));
-      if(!selectedKeys.size){ alert("삭제할 입출고 내역을 선택해주세요."); return; }
-      const currentRows = getCatalogRequests(targetCatalogId);
-      const rowsToDelete = currentRows.filter(r => selectedKeys.has(r.__key));
-      const nextRows = currentRows.filter(r => !selectedKeys.has(r.__key));
-      try{ await deleteCatalogRequestsByKeys(targetCatalogId, rowsToDelete); saveCatalogRequests(targetCatalogId, nextRows); selectedLogKeys.clear(); render(); }
-      catch(err){ console.error(err); alert("DB 삭제 중 오류가 발생했습니다."); }
-    }));
-  }
-
-  render();
-  Promise.all(catalogGroupIds.map(id => syncCatalogRequestsFromDB(id).catch(err => { console.error("도록 신청내역 DB 동기화 실패:", id, err); return false; })))
-    .then(results => { if(results.some(Boolean)) render(); });
-}
+    setTimeout(openCatalogModalNow, 0);
+  }, true);
+})();
