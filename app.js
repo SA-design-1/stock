@@ -775,12 +775,18 @@ const navReload = document.getElementById("navReload");
     }
 
 function renderCatalogMenuImage(item){
-      const latestImg = getLatestCatalogHomeImage(item && item.id);
-      if(latestImg){
-        return `<img src="${escapeAttr(latestImg)}" alt="${escapeAttr(item?.label || "")}" class="catalogMenuThumbImg">`;
-      }
-      return `<div class="catalogMenuThumbPlaceholder">IMAGE</div>`;
-    }
+       const map = {
+    "offline-auction": "images/sa-ca-01.png",
+    "contemporary-art-auction": "images/sa-ca-02.png",
+    "zero-base": "images/sa-ca-03.png"
+  };
+
+  const img = map[item.id];
+
+  return `
+    <img src="${img}" alt="${item.label}" class="catalogMenuThumbImg">
+  `;
+}
 
     function renderCatalogMenu(){
       return `
