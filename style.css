@@ -4407,3 +4407,112 @@ body.mode-list .stockStatusQty{
   .adminCatalogHomeSection{ width:100%; margin-top:24px; }
   .adminCatalogHomeList{ padding:8px 14px; }
 }
+
+
+/* ===== PATCH: 관리자 도록 요약 박스 - 아래 봉투 리스트와 가로/내부선/내용 정렬 ===== */
+.adminCatalogHomeSection{
+  width:100% !important;
+  max-width:none !important;
+  margin:34px 0 42px !important;
+}
+
+.adminCatalogHomeTitle{
+  margin:0 0 12px !important;
+  font-size:12px !important;
+  font-weight:600 !important;
+  color:#111 !important;
+  letter-spacing:-0.03em !important;
+}
+
+.adminCatalogHomeList{
+  width:100% !important;
+  background:#fafafa !important;
+  border:0 !important;
+  padding:26px 32px !important;
+}
+
+.adminCatalogHomeRow{
+  width:100% !important;
+  min-height:70px !important;
+  display:grid !important;
+  grid-template-columns:minmax(260px, 1fr) 96px 72px !important;
+  align-items:center !important;
+  gap:14px !important;
+  border:0 !important;
+  border-bottom:1px solid #dddddd !important;
+  background:transparent !important;
+  padding:14px 0 !important;
+  text-align:left !important;
+  font-family:inherit !important;
+  cursor:pointer !important;
+}
+
+.adminCatalogHomeRow:last-child{
+  border-bottom:0 !important;
+}
+
+.adminCatalogHomeMain{
+  display:flex !important;
+  flex-direction:column !important;
+  min-width:0 !important;
+  gap:4px !important;
+}
+
+.adminCatalogHomeMain strong{
+  font-size:16px !important;
+  line-height:1.2 !important;
+  font-weight:700 !important;
+  color:#171717 !important;
+  letter-spacing:-0.04em !important;
+}
+
+.adminCatalogHomeMain em{
+  font-style:normal !important;
+  font-size:13px !important;
+  line-height:1.25 !important;
+  color:#777 !important;
+  letter-spacing:-0.03em !important;
+}
+
+.adminCatalogHomeStatus,
+.adminCatalogHomeQty{
+  font-size:15px !important;
+  line-height:1 !important;
+  color:#21b7b2 !important;
+  font-weight:700 !important;
+  white-space:nowrap !important;
+  text-align:right !important;
+}
+
+.adminCatalogHomeRow:hover .adminCatalogHomeMain strong{
+  text-decoration:underline !important;
+  text-underline-offset:3px !important;
+}
+
+@media (max-width:640px){
+  .adminCatalogHomeSection{
+    width:100% !important;
+    margin-top:24px !important;
+  }
+
+  .adminCatalogHomeList{
+    padding:16px 18px !important;
+  }
+
+  .adminCatalogHomeRow{
+    min-height:62px !important;
+    grid-template-columns:minmax(0, 1fr) auto auto !important;
+    gap:10px !important;
+    padding:12px 0 !important;
+  }
+
+  .adminCatalogHomeMain strong{
+    font-size:14px !important;
+  }
+
+  .adminCatalogHomeMain em,
+  .adminCatalogHomeStatus,
+  .adminCatalogHomeQty{
+    font-size:12px !important;
+  }
+}
