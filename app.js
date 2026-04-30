@@ -304,7 +304,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
           {
             id: "env-letter",
             name: "편지봉투",
-            size: "220*105mm",
+            size: "390*140*300mm",
             baseStock: 1000,
             img: "Letter-Envelope(Front).jpg",
             images: ["Letter-Envelope(Front).jpg","Letter-envelope(back).jpg"],
@@ -403,7 +403,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
           {
             id: "bag-black-small",
             name: "흑지쇼핑백(小)",
-            size: "200*105mm",
+            size: "390*140*300mm",
             baseStock: 1000,
             img: "Black-Shopping-Bag(S).jpg",
             images: ["Black-Shopping-Bag(S).jpg", "Black-Shopping-Bag.jpg"],
@@ -527,8 +527,8 @@ const navReload = document.getElementById("navReload");
     const topbar = document.getElementById("topbar");
     const topTitle = document.getElementById("topTitle");
 
-    const TOPBAR_TITLE_LOGO_HTML = `<img src="images/sa-logo.jpg" class="topLogo" alt="SeoulAuction">`;
-    const TOPBAR_RIGHT_LOGO_HTML = `<img src="images/sa-logo.jpg" alt="SeoulAuction">`;
+    const TOPBAR_TITLE_LOGO_HTML = `<img src="images/sa-logo-5.jpg" class="topLogo" alt="SeoulAuction">`;
+    const TOPBAR_RIGHT_LOGO_HTML = `<img src="images/sa-logo-5.jpg" alt="SeoulAuction">`;
     const TOPBAR_CATALOG_SEARCH_HTML = `<input id="catalogSearch" class="catalogTopSearch" type="text" placeholder="" aria-label="검색">`;
 
     function setTopbarTitleLogo(){
@@ -1437,56 +1437,30 @@ if(item.img && (!item.images || !item.images[0])){
       return true;
     }
 
-    const ITEM_IMAGE_BUCKET = "warehouse-item-images";
-
-    function getSafeImageExt(file){
-      const byName = String(file?.name || "").split(".").pop() || "";
-      const byType = String(file?.type || "").split("/").pop() || "";
-      const raw = (byName || byType || "jpg").toLowerCase();
-      const safe = raw.replace(/[^a-z0-9]/g, "");
-      if(safe === "jpeg") return "jpg";
-      if(["jpg", "png", "webp", "gif"].includes(safe)) return safe;
-      return "jpg";
-    }
-
     async function uploadItemImage(file, itemId){
       if(!supabaseClient) throw new Error("supabaseClient not ready");
       if(!file) return null;
 
-      if(!String(file.type || "").startsWith("image/")){
-        throw new Error("이미지 파일만 업로드할 수 있습니다.");
-      }
-
-      // Supabase Storage 기본 제한과 화면 로딩 속도를 고려해 10MB 이하만 허용
-      if(Number(file.size || 0) > 10 * 1024 * 1024){
-        throw new Error("이미지 용량은 10MB 이하로 업로드해주세요.");
-      }
-
-      const safeExt = getSafeImageExt(file);
-      const safeItemId = String(itemId || `item-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g, "-");
-      const filePath = `items/${safeItemId}-${Date.now()}.${safeExt}`;
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const safeExt = ext.replace(/[^a-z0-9]/g, "") || "jpg";
+      const filePath = `items/${itemId}-${Date.now()}.${safeExt}`;
 
       const { error: uploadError } = await supabaseClient
         .storage
-        .from(ITEM_IMAGE_BUCKET)
+        .from("warehouse-item-images")
         .upload(filePath, file, {
           cacheControl: "3600",
-          upsert: true,
-          contentType: file.type || `image/${safeExt}`
+          upsert: false
         });
 
       if(uploadError) throw uploadError;
 
       const { data: publicUrlData } = supabaseClient
         .storage
-        .from(ITEM_IMAGE_BUCKET)
+        .from("warehouse-item-images")
         .getPublicUrl(filePath);
 
-      if(!publicUrlData?.publicUrl){
-        throw new Error("이미지 공개 URL 생성에 실패했습니다.");
-      }
-
-      return publicUrlData.publicUrl;
+      return publicUrlData?.publicUrl || null;
     }
 
     async function saveItemToDB(item, categoryName){
@@ -2036,7 +2010,7 @@ if(item.img && (!item.images || !item.images[0])){
                 : `<button class="mainHomeBtn requestDarkBtn" id="goRequestPage" type="button"> 신청하기</button>`
             }
             <button class="mainHomeBtn stockBtn" id="goStockPage" type="button">물품 재고현황</button>
-            <button class="mainHomeBtn shopHomeBtn" id="goShopPage" type="button">SA SHOP</button>
+            <button class="mainHomeBtn shopHomeBtn" id="goShopPage" type="button">제품 구매하기</button>
             <button class="mainHomeBtn logoutBtn" id="logoutBtn" type="button">로그아웃</button>
           </div>
         </div>
@@ -2229,7 +2203,7 @@ if(item.img && (!item.images || !item.images[0])){
           <div class="shopInner">
             <div class="shopHead">
               <h2 class="shopTitle">SHOP</h2>
-              <button class="shopLink" type="button" data-go-shop>SA SHOP <span>▶</span></button>
+              <button class="shopLink" type="button" data-go-shop>제품 구매하기 <span>▶</span></button>
             </div>
             <div class="shopGrid">
             ${(section.items || []).map(it => `
@@ -2249,7 +2223,7 @@ if(item.img && (!item.images || !item.images[0])){
       `;
     }
 
-    function prepareShopPage(title="SA SHOP"){
+    function prepareShopPage(title="제품 구매하기"){
       topbar.style.display = "flex";
       searchBox.style.display = "flex";
       setTopbarRightLogo();
@@ -2264,7 +2238,7 @@ if(item.img && (!item.images || !item.images[0])){
       const cartCount = getShopCart().reduce((sum, row)=>sum + Number(row.qty || 0), 0);
       return `
         <div class="shopPageHead">
-          <button class="shopPageTitle shopPageTitleBtn" type="button" data-shop-home><strong>제품</strong><span>|</span><em>Product</em></button>
+          <div class="shopPageTitle"><strong>제품</strong><span>|</span><em>Product</em></div>
           <div class="shopPageIcons">
             <button class="shopIconBtn ${active === 'account' ? 'active' : ''}" type="button" data-shop-account title="마이페이지" aria-label="마이페이지">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12.2c2.25 0 4.05-1.86 4.05-4.15C16.05 5.78 14.25 4 12 4S7.95 5.78 7.95 8.05c0 2.29 1.8 4.15 4.05 4.15Z"/><path d="M5.8 21c.62-3.72 2.98-5.8 6.2-5.8s5.58 2.08 6.2 5.8"/></svg>
@@ -2317,9 +2291,8 @@ if(item.img && (!item.images || !item.images[0])){
               <svg viewBox="0 0 24 24"><path d="M12 12.2c2.25 0 4.05-1.86 4.05-4.15C16.05 5.78 14.25 4 12 4S7.95 5.78 7.95 8.05c0 2.29 1.8 4.15 4.05 4.15Z"/><path d="M5.8 21c.62-3.72 2.98-5.8 6.2-5.8s5.58 2.08 6.2 5.8"/></svg>
             </div>
             <div class="shopAccountTitle">MY PAGE</div>
-            <div class="shopAccountSub">주문 신청, 승인된 주문 내역과 장바구니를 확인할 수 있습니다.</div>
+            <div class="shopAccountSub">제품 구매 내역과 장바구니를 확인할 수 있습니다.</div>
             <div class="shopAccountMenu">
-              <button type="button" data-shop-order-requests>주문신청</button>
               <button type="button" data-shop-orders>주문조회</button>
               <button type="button" data-shop-cart>장바구니</button>
               <button type="button" data-shop-home>제품 목록</button>
@@ -2434,119 +2407,16 @@ if(item.img && (!item.images || !item.images[0])){
           await submitShopOrder(rows);
           saveShopCart([]);
           await loadAllFromDB_FORCE().catch(()=>{});
-          location.hash = "#/shop/order-requests";
+          location.hash = "#/shop/orders";
         }catch(err){
           alert("구매 신청 등록 실패: " + (err?.message || err));
         }
       });
     }
 
-    function getSyncedShopOrderHistory(){
-      const history = getShopOrderHistory();
-      const requestByDbId = new Map();
-      getShopRequestRows().forEach(r => {
-        if(r._dbid) requestByDbId.set(String(r._dbid), r);
-      });
-
-      let changed = false;
-      const synced = history.map(order => ({
-        ...order,
-        rows: (order.rows || []).map(row => {
-          const req = row.requestDbId ? requestByDbId.get(String(row.requestDbId)) : null;
-          const nextStatus = req ? (req.status || "pending") : (row.status || "pending");
-          if(nextStatus !== row.status) changed = true;
-          return { ...row, status: nextStatus };
-        })
-      })).filter(order => (order.rows || []).length);
-
-      if(changed) saveShopOrderHistory(synced);
-      return synced;
-    }
-
-    function shopOrderStatusLabel(status){
-      if(status === "approved") return "승인완료";
-      if(status === "rejected") return "반려";
-      return "승인대기";
-    }
-
-    async function deleteShopOrderRequest(row){
-      if(!row?.requestDbId) throw new Error("삭제할 주문 신청 ID가 없습니다.");
-      const it = getShopItemById(row.id);
-      if(!it) throw new Error("제품 정보를 찾을 수 없습니다.");
-      await deleteRequestsByKeys(it.id, [{ _dbid: row.requestDbId }]);
-
-      const history = getShopOrderHistory()
-        .map(order => ({
-          ...order,
-          rows: (order.rows || []).filter(r => String(r.requestDbId || "") !== String(row.requestDbId || ""))
-        }))
-        .filter(order => (order.rows || []).length);
-      saveShopOrderHistory(history);
-    }
-
-    async function renderShopOrderRequestsPage(){
-      prepareShopPage("주문신청");
-      await loadAllFromDB_FORCE().catch(()=>{});
-      const history = getSyncedShopOrderHistory().map(order => ({
-        ...order,
-        rows: (order.rows || []).filter(row => (row.status || "pending") !== "approved")
-      })).filter(order => (order.rows || []).length);
-      const total = history.reduce((sum, order)=> sum + (order.rows || []).reduce((s,r)=>s + Number(r.price || 0) * Number(r.qty || 0), 0), 0);
-      app.innerHTML = `
-        <div class="shopPage shopOrdersPage shopOrderRequestsPage">
-          ${renderShopPageHeader("주문신청", "account")}
-          <h2 class="shopSubTitle">주문신청</h2>
-          <div class="shopOrderHistoryList">
-            ${history.length ? history.map(order => `
-              <div class="shopOrderGroup">
-                <div class="shopOrderNo">${escapeHtml(order.orderNo || "주문번호")} <span class="shopOrderNotice">관리자 승인 후 주문조회에 반영됩니다.</span></div>
-                ${(order.rows || []).map(row => {
-                  const lineTotal = Number(row.price || 0) * Number(row.qty || 0);
-                  const canDelete = (row.status || "pending") === "pending";
-                  return `
-                    <div class="shopOrderRow">
-                      <div class="shopOrderThumb">${row.img ? renderSmartImage(row.img, row.name) : iconPlaceholder()}</div>
-                      <div class="shopOrderInfo">
-                        <div class="shopOrderName">${escapeHtml(getShopDisplayName(row))}</div>
-                        <div class="shopOrderColor">${escapeHtml(row.color || "-")}</div>
-                        <div class="shopOrderLine"></div>
-                        <div class="shopOrderMeta"><span>${Number(row.qty || 0)}개</span><em>${escapeHtml(formatPrice(row.price || 0))} KRW</em></div>
-                        <div class="shopOrderTotal">${escapeHtml(formatPrice(lineTotal))} KRW</div>
-                        <div class="shopOrderState ${escapeAttr(row.status || "pending")}">${escapeHtml(shopOrderStatusLabel(row.status || "pending"))}</div>
-                        ${canDelete ? `<button class="shopOrderDeleteBtn" type="button" data-shop-order-delete="${escapeAttr(row.requestDbId || "")}">삭제</button>` : ``}
-                      </div>
-                    </div>
-                  `;
-                }).join("")}
-              </div>
-            `).join("") : `<div class="shopCartEmpty">주문 신청 내역이 없습니다.</div>`}
-          </div>
-          ${history.length ? `<div class="shopGrandTotal"><span>총 신청 금액</span><strong>${escapeHtml(formatPrice(total))} KRW</strong></div>` : ``}
-        </div>
-      `;
-      bindShopCommonEvents();
-      app.querySelectorAll("[data-shop-order-delete]").forEach(btn => btn.addEventListener("click", async ()=>{
-        const id = btn.dataset.shopOrderDelete;
-        const target = history.flatMap(o => o.rows || []).find(r => String(r.requestDbId || "") === String(id || ""));
-        if(!target) return;
-        if(!confirm("이 주문 신청을 삭제하시겠습니까?")) return;
-        try{
-          await deleteShopOrderRequest(target);
-          await loadAllFromDB_FORCE().catch(()=>{});
-          renderShopOrderRequestsPage();
-        }catch(err){
-          alert("주문 신청 삭제 실패: " + (err?.message || err));
-        }
-      }));
-    }
-
-    async function renderShopOrdersPage(){
+    function renderShopOrdersPage(){
       prepareShopPage("주문조회");
-      await loadAllFromDB_FORCE().catch(()=>{});
-      const history = getSyncedShopOrderHistory().map(order => ({
-        ...order,
-        rows: (order.rows || []).filter(row => (row.status || "pending") === "approved")
-      })).filter(order => (order.rows || []).length);
+      const history = getShopOrderHistory();
       const total = history.reduce((sum, order)=> sum + (order.rows || []).reduce((s,r)=>s + Number(r.price || 0) * Number(r.qty || 0), 0), 0);
       app.innerHTML = `
         <div class="shopPage shopOrdersPage">
@@ -2567,13 +2437,12 @@ if(item.img && (!item.images || !item.images[0])){
                         <div class="shopOrderLine"></div>
                         <div class="shopOrderMeta"><span>${Number(row.qty || 0)}개</span><em>${escapeHtml(formatPrice(row.price || 0))} KRW</em></div>
                         <div class="shopOrderTotal">${escapeHtml(formatPrice(lineTotal))} KRW</div>
-                        <div class="shopOrderState approved">승인완료</div>
                       </div>
                     </div>
                   `;
                 }).join("")}
               </div>
-            `).join("") : `<div class="shopCartEmpty">승인 완료된 주문 내역이 없습니다.</div>`}
+            `).join("") : `<div class="shopCartEmpty">주문 신청 내역이 없습니다.</div>`}
           </div>
           ${history.length ? `<div class="shopGrandTotal"><span>총 주문 금액</span><strong>${escapeHtml(formatPrice(total))} KRW</strong></div>` : ``}
         </div>
@@ -2626,7 +2495,7 @@ if(item.img && (!item.images || !item.images[0])){
   const status = r.status || "pending";
   return status === "pending" || status === "rejected";
 });
-      const logRows = (it.logs || []).filter(r => r.t === '출고' || r.t === '입고');
+      const logRows = (it.logs || []).filter(r => r.dept === "SHOP" || r.person === "SHOP" || String(r.person || '').includes('@'));
       app.innerHTML = `
         <div class="shopPage shopAdminDetailPage">
           ${renderShopPageHeader("구매 신청내역", "cart")}
@@ -2638,14 +2507,6 @@ if(item.img && (!item.images || !item.images[0])){
               <div class="shopAdminDetailColor">${escapeHtml(getShopColorLabel(it))}</div>
               <div class="shopAdminDetailLine"></div>
               <div class="shopAdminStock"><span>현재 재고</span><strong>${Number(calcStock(it) || 0).toLocaleString()}개</strong></div>
-              <div class="shopAdminBaseStockEdit">
-                <button class="shopAdminBaseStockBtn" id="shopEditBaseStockBtn" type="button">기준재고 <b>${Number(it.baseStock || 0).toLocaleString()}</b>개</button>
-                <div class="shopAdminBaseStockForm" id="shopBaseStockEditRow" hidden>
-                  <input id="shopBaseStockInput" inputmode="numeric" value="${Number(it.baseStock || 0)}" />
-                  <button type="button" id="shopSaveBaseStockBtn">저장</button>
-                  <button type="button" id="shopCancelBaseStockBtn">취소</button>
-                </div>
-              </div>
             </div>
           </div>
           <div class="shopAdminTableTitleRow">
@@ -2657,49 +2518,27 @@ if(item.img && (!item.images || !item.images[0])){
             </div>
           </div>
           <div class="shopAdminMiniTable">
-            <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>전체 부서</span><span>전체 상태</span></div>
+            <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>전채 부서</span><span>전채 상태</span></div>
             ${requestRows.length ? requestRows.map(r => `
               <label class="shopAdminMiniRow">
                 <input type="checkbox" data-shop-req="${escapeAttr(r.__key)}" checked>
                 <span>${escapeHtml(formatKRDate(r.d))}</span><span>신청</span><span>${escapeHtml(r.dept || '-')}</span><span>${escapeHtml(getShopRequestBadgeText(r))}</span>
               </label>
-            `).join("") : `<div class="shopAdminMiniEmpty">반영된 내역이 없습니다.</div>`}
+            `).join("") : `<div class="shopAdminMiniEmpty"></div><div class="shopAdminMiniEmpty"></div>`}
           </div>
           <div class="shopAdminTableTitleRow shopAdminLogTitleRow">
             <h3>입출고 내역</h3>
             <div class="shopAdminActions"><button type="button">삭제</button></div>
           </div>
           <div class="shopAdminMiniTable">
-            <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>전체 부서</span><span>전체 상태</span></div>
+            <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>전채 부서</span><span>전채 상태</span></div>
             ${logRows.length ? logRows.map(r => `
               <div class="shopAdminMiniRow noCheck"><span>${escapeHtml(formatKRDate(r.d))}</span><span>${escapeHtml(r.t || '-')}</span><span>${escapeHtml(r.dept || '-')}</span><span>${Number(r.qty || 0)}개</span></div>
-            `).join("") : `<div class="shopAdminMiniEmpty">반영된 내역이 없습니다.</div>`}
+            `).join("") : `<div class="shopAdminMiniEmpty"></div><div class="shopAdminMiniEmpty"></div>`}
           </div>
         </div>
       `;
       bindShopCommonEvents();
-      const shopEditBaseStockBtn = document.getElementById("shopEditBaseStockBtn");
-      const shopBaseStockEditRow = document.getElementById("shopBaseStockEditRow");
-      const shopBaseStockInput = document.getElementById("shopBaseStockInput");
-      const shopSaveBaseStockBtn = document.getElementById("shopSaveBaseStockBtn");
-      const shopCancelBaseStockBtn = document.getElementById("shopCancelBaseStockBtn");
-      shopEditBaseStockBtn?.addEventListener("click", ()=>{
-        if(shopBaseStockEditRow) shopBaseStockEditRow.hidden = false;
-        shopBaseStockInput?.focus();
-      });
-      shopCancelBaseStockBtn?.addEventListener("click", ()=>{
-        if(shopBaseStockEditRow) shopBaseStockEditRow.hidden = true;
-        if(shopBaseStockInput) shopBaseStockInput.value = String(Number(it.baseStock || 0));
-      });
-      shopSaveBaseStockBtn?.addEventListener("click", async ()=>{
-        try{
-          await updateItemBaseStock(it.id, shopBaseStockInput?.value || 0);
-          await loadAllFromDB_FORCE().catch(()=>{});
-          renderShopAdminDetailPage(itemId);
-        }catch(err){
-          alert("기준재고 저장 실패: " + (err?.message || err));
-        }
-      });
       const selectedRows = () => requestRows.filter(r => app.querySelector(`[data-shop-req="${CSS.escape(r.__key)}"]`)?.checked);
       document.getElementById("shopApproveBtn")?.addEventListener("click", async ()=>{
         const rows = selectedRows();
@@ -2755,16 +2594,22 @@ if(item.img && (!item.images || !item.images[0])){
         btn.addEventListener("click", ()=>{ location.hash = "#/shop"; });
       });
       app.querySelectorAll("[data-shop-cart]").forEach(btn => {
-        btn.addEventListener("click", ()=>{ location.hash = "#/shop/cart"; });
+        btn.addEventListener("click", async ()=>{
+          const ok = await isAdminUser();
+          location.hash = ok ? "#/shop" : "#/shop/cart";
+        });
       });
       app.querySelectorAll("[data-shop-account]").forEach(btn => {
-        btn.addEventListener("click", ()=>{ location.hash = "#/shop/account"; });
-      });
-      app.querySelectorAll("[data-shop-order-requests]").forEach(btn => {
-        btn.addEventListener("click", ()=>{ location.hash = "#/shop/order-requests"; });
+        btn.addEventListener("click", async ()=>{
+          const ok = await isAdminUser();
+          location.hash = ok ? "#/shop" : "#/shop/account";
+        });
       });
       app.querySelectorAll("[data-shop-orders]").forEach(btn => {
-        btn.addEventListener("click", ()=>{ location.hash = "#/shop/orders"; });
+        btn.addEventListener("click", async ()=>{
+          const ok = await isAdminUser();
+          location.hash = ok ? "#/shop" : "#/shop/orders";
+        });
       });
     }
 
@@ -2802,6 +2647,52 @@ if(item.img && (!item.images || !item.images[0])){
             </div>
           </div>
         </div>
+      `;
+    }
+
+
+    function renderStockShopSummary(keyword = ""){
+      const search = String(keyword || "").trim().toLowerCase();
+      const items = getShopItems().filter(it => {
+        if(!search) return true;
+        const hay = `${it.name || ""} ${it.size || ""} ${it.price || ""} ${getShopColorLabel(it) || ""}`.toLowerCase();
+        return hay.includes(search);
+      });
+
+      if(!items.length) return "";
+
+      return `
+        <section class="stockShopSection" aria-label="SHOP 제품 재고">
+          <div class="stockShopInner">
+            <div class="stockShopHead">
+              <div class="stockShopTitle">
+                <span>SHOP</span>
+                <em>|</em>
+                <small>Product</small>
+              </div>
+              <div class="stockShopRight">재고</div>
+            </div>
+
+            <div class="stockShopGrid">
+              ${items.map(it => {
+                const stock = Number(calcStock(it) || 0);
+                return `
+                  <div class="stockShopCard" data-stock-shop-id="${escapeAttr(it.id)}">
+                    <div class="stockShopThumb">
+                      ${it.img ? renderSmartImage(it.img, it.name) : iconPlaceholder()}
+                    </div>
+                    <div class="stockShopInfo">
+                      <div class="stockShopName">${escapeHtml(getShopDisplayName(it))}</div>
+                      <div class="stockShopColor">${escapeHtml(getShopColorLabel(it))}</div>
+                      <div class="stockShopPrice">${escapeHtml(formatPrice(parsePrice(it.price)))}</div>
+                    </div>
+                    <div class="stockShopQty">${Number.isFinite(stock) ? `${stock.toLocaleString()}<small>개</small>` : `-`}</div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        </section>
       `;
     }
 
@@ -2929,7 +2820,8 @@ if(item.img && (!item.images || !item.images[0])){
 
       // 도록 신청하기 자체 제거: 신청/관리자/재고현황 홈에서 도록 영역을 표시하지 않음
       const catalogMenuHtml = "";
-      app.innerHTML = (catalogMenuHtml + sectionsHtml) || `
+      const stockShopHtml = isStockMode ? renderStockShopSummary(keyword) : "";
+      app.innerHTML = (catalogMenuHtml + sectionsHtml + stockShopHtml) || `
         <div class="paper">
           <div class="paper-head">안내</div>
           <div class="paper-body">등록된 품목이 없습니다.</div>
@@ -4242,13 +4134,17 @@ const detailImagesHtml = detailImages.length
         if(ok) await renderShopAdminRequestsPage();
         else renderShopListPage();
       }else if(hash === "#/shop/account"){
-        renderShopAccountPage();
-      }else if(hash === "#/shop/order-requests"){
-        await renderShopOrderRequestsPage();
+        const ok = await isAdminUser();
+        if(ok) await renderShopAdminRequestsPage();
+        else renderShopAccountPage();
       }else if(hash === "#/shop/orders"){
-        await renderShopOrdersPage();
+        const ok = await isAdminUser();
+        if(ok) await renderShopAdminRequestsPage();
+        else renderShopOrdersPage();
       }else if(hash === "#/shop/cart"){
-        renderShopCartPage();
+        const ok = await isAdminUser();
+        if(ok) await renderShopAdminRequestsPage();
+        else renderShopCartPage();
       }else if(adminShopItem){
         const ok = await isAdminUser();
         if(!ok){ alert("관리자 권한이 없습니다."); location.hash = "#/"; return; }
@@ -4327,31 +4223,18 @@ const detailImagesHtml = detailImages.length
     itemClose?.addEventListener("click", closeItemModal);
 
     createItemBtn?.addEventListener("click", async ()=>{
-      if(createItemBtn.dataset.loading === "1") return;
-      createItemBtn.dataset.loading = "1";
-      createItemBtn.disabled = true;
-      const originalCreateItemText = createItemBtn.textContent;
-      createItemBtn.textContent = "저장 중...";
-
-      const resetCreateItemButton = () => {
-        createItemBtn.dataset.loading = "0";
-        createItemBtn.disabled = false;
-        createItemBtn.textContent = originalCreateItemText || "추가";
-      };
-
-      try{
       const category = (nCategory?.value || "").trim();
       const name = (nName?.value || "").trim();
       const size = (nSize?.value || "").trim();
       const base = Number(String(nBase?.value || "").replace(/,/g,""));
       const imageFile = nImgFile?.files?.[0] || null;
 
-      if(!category){ alert("카테고리를 입력해주세요."); resetCreateItemButton(); return; }
-      if(!name){ alert("품목명을 입력해주세요."); resetCreateItemButton(); return; }
-      if(!Number.isFinite(base) || base < 0){ alert("기준재고는 0 이상 숫자여야 합니다."); resetCreateItemButton(); return; }
+      if(!category){ alert("카테고리를 입력해주세요."); return; }
+      if(!name){ alert("품목명을 입력해주세요."); return; }
+      if(!Number.isFinite(base) || base < 0){ alert("기준재고는 0 이상 숫자여야 합니다."); return; }
 
       const sec = ensureCategory(category);
-      if(!sec){ alert("카테고리 생성에 실패했습니다."); resetCreateItemButton(); return; }
+      if(!sec){ alert("카테고리 생성에 실패했습니다."); return; }
 
       const baseId = slugifyId(`${category}-${name}-${size}`);
       let id = baseId;
@@ -4367,8 +4250,7 @@ const detailImagesHtml = detailImages.length
           uploadedImageUrl = await uploadItemImage(imageFile, id);
         }catch(err){
           console.error(err);
-          alert("이미지 업로드에 실패했습니다.\nSupabase SQL Editor에서 13_item_image_upload_storage.sql을 먼저 실행해주세요.\n\n상세: " + (err?.message || err));
-          resetCreateItemButton();
+          alert("이미지 업로드에 실패했습니다.\nStorage 버킷/권한 설정을 확인해주세요.");
           return;
         }
       }
@@ -4411,13 +4293,7 @@ const detailImagesHtml = detailImages.length
 
       if(q) q.value = "";
       location.hash = "#/admin";
-      resetCreateItemButton();
       router();
-      }catch(err){
-        console.error(err);
-        alert("품목 추가 처리 중 오류가 발생했습니다.\n" + (err?.message || err));
-        resetCreateItemButton();
-      }
     });
 
     doSearch?.addEventListener("click", async ()=>{
@@ -4478,15 +4354,17 @@ const detailImagesHtml = detailImages.length
       }else if(hash === "#/list"){
         renderHome("list");
       }else if(hash === "#/shop"){
-        renderShopListPage();
+        const ok = await isAdminUser();
+        if(ok) await renderShopAdminRequestsPage();
+        else renderShopListPage();
       }else if(hash === "#/shop/account"){
-        renderShopAccountPage();
-      }else if(hash === "#/shop/order-requests"){
-        return;
-      }else if(hash === "#/shop/orders"){
-        return;
+        const ok = await isAdminUser();
+        if(ok) await renderShopAdminRequestsPage();
+        else renderShopAccountPage();
       }else if(hash === "#/shop/cart"){
-        renderShopCartPage();
+        const ok = await isAdminUser();
+        if(ok) await renderShopAdminRequestsPage();
+        else renderShopCartPage();
       }else if(/^#\/shop\/item\//.test(hash)){
         return;
       }else if(hash === "#/request"){
