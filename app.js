@@ -159,12 +159,10 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     title: "도록 | Major Auction",
     yearPlaceholder: "연도",
     galleryImages: [
-      "images/1/2601_189.jpg",
-      "images/1/2602_190.jpg",
-      "images/1/2603_contem.jpg",
-      "images/1/sa-d-1.jpg",
-      "images/sa-ca-01.png",
-      "images/sa-ca-01.png"
+      "images/2601_189.jpg",
+      "images/2602_190.jpg",
+      "images/sa-d-1.jpg",
+     
     ],
     data: {
       "2031": [],
@@ -181,12 +179,10 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     title: "도록 | Contemporary Art Sale",
     yearPlaceholder: "연도",
     galleryImages: [
-      "images/sa-ca-02.png",
-      "images/sa-ca-02.png",
-      "images/sa-ca-02.png",
-      "images/sa-ca-02.png",
-      "images/sa-ca-02.png",
-      "images/sa-ca-02.png"
+      "images/sa-d-2.jpg",
+      "images/sa-d-4.jpg",
+      "images/sa-d-9.jpg",
+     
     ],
     data: {
       "2031": [],
@@ -203,12 +199,9 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     title: "도록 | Zero Base",
     yearPlaceholder: "연도",
     galleryImages: [
-      "images/sa-ca-03.png",
-      "images/sa-ca-03.png",
-      "images/sa-ca-03.png",
-      "images/sa-ca-03.png",
-      "images/sa-ca-03.png",
-      "images/sa-ca-03.png"
+      "images/sa-d-13.jpg",
+      "images/sa-d-10.jpg",
+      "images/sa-d-11.jpg",
     ],
     data: {
       "2031": [],
