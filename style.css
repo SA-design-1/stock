@@ -4516,3 +4516,187 @@ body.mode-list .stockStatusQty{
     font-size:12px !important;
   }
 }
+
+/* ===== SHOP 전용 장바구니 / 관리자 구매 신청내역 ===== */
+body.mode-shop .shopCartPage,
+body.mode-shop .shopAdminOrdersPage{
+  max-width:452px;
+  padding-top:22px;
+}
+
+body.mode-shop .shopCartPage .shopPageHead,
+body.mode-shop .shopAdminOrdersPage .shopPageHead{
+  margin-bottom:28px;
+}
+
+body.mode-shop .shopCartList,
+body.mode-shop .shopAdminOrderList{
+  gap:14px;
+}
+
+body.mode-shop .shopCartRow{
+  grid-template-columns:150px minmax(0, 1fr) 72px;
+  gap:20px;
+  min-height:173px;
+  padding:22px 16px 20px 24px;
+  border:1px solid #d9d9d9;
+  background:#fff;
+}
+
+body.mode-shop .shopCartThumb{
+  width:145px;
+  height:124px;
+}
+
+body.mode-shop .shopCartName{
+  font-size:14px;
+  font-weight:600;
+  margin-bottom:2px;
+}
+
+body.mode-shop .shopCartColor{
+  font-size:12px;
+  color:#777;
+  margin-bottom:6px;
+}
+
+body.mode-shop .shopQtyControl{
+  margin:7px 0 8px;
+  gap:8px;
+  color:#777;
+}
+
+body.mode-shop .shopQtyControl span{
+  min-width:20px;
+  height:20px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #d9d9d9;
+  color:#777;
+  font-size:12px;
+}
+
+body.mode-shop .shopQtyControl button{
+  width:auto;
+  height:auto;
+  border:0;
+  background:transparent;
+  color:#777;
+  font-size:13px;
+}
+
+body.mode-shop .shopCartUnit{
+  font-size:16px;
+  font-weight:800;
+}
+
+body.mode-shop .shopCartPrice{
+  align-self:end;
+  justify-self:end;
+  font-size:16px;
+  font-weight:800;
+  padding-bottom:4px;
+}
+
+body.mode-shop .shopOrderBtn{
+  width:196px;
+  height:42px;
+  margin:44px 0 0 auto;
+  background:#84cdc9;
+  font-size:14px;
+  letter-spacing:.02em;
+}
+
+.shopAdminOrdersTitle{
+  margin:0 0 32px;
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:-0.04em;
+}
+
+.shopAdminOrderRow{
+  display:grid;
+  grid-template-columns:150px minmax(0, 1fr);
+  gap:38px;
+  align-items:center;
+  min-height:156px;
+  padding:20px 36px 20px 26px;
+  border:1px solid #d9d9d9;
+  background:#fff;
+}
+
+.shopAdminOrderThumb{
+  width:130px;
+  height:116px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.shopAdminOrderThumb img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+
+.shopAdminOrderName{
+  font-size:14px;
+  font-weight:600;
+  color:#111;
+  line-height:1.35;
+}
+
+.shopAdminOrderColor{
+  font-size:12px;
+  color:#777;
+  line-height:1.6;
+}
+
+.shopAdminOrderLine{
+  height:1px;
+  background:#d9d9d9;
+  margin:7px 0 14px;
+}
+
+.shopAdminOrderMeta,
+.shopAdminOrderBottom{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  align-items:center;
+}
+
+.shopAdminOrderMeta{
+  color:#ff3333;
+  font-size:14px;
+  margin-bottom:16px;
+}
+
+.shopAdminOrderBottom{
+  color:#111;
+  font-size:15px;
+  font-weight:800;
+}
+
+@media (max-width:640px){
+  body.mode-shop .shopCartPage,
+  body.mode-shop .shopAdminOrdersPage{
+    max-width:100%;
+  }
+  body.mode-shop .shopCartRow,
+  .shopAdminOrderRow{
+    grid-template-columns:112px minmax(0, 1fr);
+    gap:18px;
+    padding:18px 16px;
+  }
+  body.mode-shop .shopCartPrice{
+    grid-column:2;
+  }
+  body.mode-shop .shopCartThumb,
+  .shopAdminOrderThumb{
+    width:110px;
+    height:104px;
+  }
+}
