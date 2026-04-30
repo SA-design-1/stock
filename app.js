@@ -3789,10 +3789,25 @@ const detailImagesHtml = detailImages.length
       }else if(shopItem){
         renderShopDetailPage(decodeURIComponent(shopItem[1]));
       }else if(hash === "#/request"){
+        const ok = await isAdminUser();
+        if(ok){
+          location.hash = "#/admin";
+          return;
+        }
         renderHome("request");
       }else if(requestCatalogApply){
+        const ok = await isAdminUser();
+        if(ok){
+          location.hash = "#/admin";
+          return;
+        }
         renderCatalogApplyPage(decodeURIComponent(requestCatalogApply[1]));
       }else if(requestCatalog){
+        const ok = await isAdminUser();
+        if(ok){
+          location.hash = "#/admin";
+          return;
+        }
         renderCatalogDetail(decodeURIComponent(requestCatalog[1]));
       }else if(hash === "#/list"){
         renderHome("list");
@@ -3937,6 +3952,11 @@ const detailImagesHtml = detailImages.length
       }else if(hash === "#/list"){
         renderHome("list");
       }else{
+        const ok = await isAdminUser();
+        if(ok){
+          location.hash = "#/admin";
+          return;
+        }
         renderHome("request");
       }
     });
@@ -3955,6 +3975,11 @@ const detailImagesHtml = detailImages.length
         }else if(hash === "#/list"){
           renderHome("list");
         }else{
+          const ok = await isAdminUser();
+          if(ok){
+            location.hash = "#/admin";
+            return;
+          }
           renderHome("request");
         }
       }
@@ -3980,6 +4005,11 @@ const detailImagesHtml = detailImages.length
       }else if(/^#\/shop\/item\//.test(hash)){
         return;
       }else if(hash === "#/request"){
+        const ok = await isAdminUser();
+        if(ok){
+          location.hash = "#/admin";
+          return;
+        }
         renderHome("request");
       }
     });
