@@ -3744,20 +3744,19 @@ const detailImagesHtml = detailImages.length
           approveRequestsBtn.addEventListener("click", async ()=>{
             const rows = (it.requests || []).filter(r => selectedRequestKeys.has(r.__key));
             const approvableRows = rows.filter(r => {
-  const status = r.status || "pending";
-  return status === "pending" || status === "rejected";
-});
-            for(const r of approvableRows){
-  if(!r._dbid){
-    throw new Error("DB 요청 ID가 없습니다.");
-  }
-  await approveRequestByRpc(r._dbid, approverEmail || "");
-}
+              const status = r.status || "pending";
+              return status === "pending" || status === "rejected";
+            });
+
+            if(approvableRows.length === 0){
+              alert("승인할 요청 내역을 선택해주세요.");
+              return;
+            }
 
             const approverEmail = await getCurrentUserEmail();
 
             try{
-              for(const r of pendingRows){
+              for(const r of approvableRows){
                 if(!r._dbid){
                   throw new Error("DB 요청 ID가 없습니다.");
                 }
@@ -5257,12 +5256,14 @@ async function renderCatalogDetail(catalogId){
     }));
     app.querySelector("#catalogApproveRequestsBtn")?.addEventListener("click", async ()=>{
       const currentRows = getCatalogRequests(catalogId);
-      const pendingRows = currentRows.filter(r => selectedRequestKeys.has(r.__key) && (r.status || "pending") === "pending");
-      if(!pendingRows.length){ alert("승인할 신청 내역을 선택해주세요."); return; }
+      const approvableRows = currentRows.filter(r => {
+        const status = r.status || "pending";
+        return selectedRequestKeys.has(r.__key) && (status === "pending" || status === "rejected");
+      });
+      if(!approvableRows.length){ alert("승인할 신청 내역을 선택해주세요."); return; }
       const approverEmail = await getCurrentUserEmail();
       try{
-        for(const r of pendingRows) await approveCatalogRequestRow(catalogId, r, approverEmail || "");
-        saveCatalogRequests(catalogId, currentRows);
+        for(const r of approvableRows) await approveCatalogRequestRow(catalogId, r, approverEmail || "");
         await syncCatalogRequestsFromDB(catalogId);
         selectedRequestKeys.clear();
         render();
