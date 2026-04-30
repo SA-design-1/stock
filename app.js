@@ -527,8 +527,8 @@ const navReload = document.getElementById("navReload");
     const topbar = document.getElementById("topbar");
     const topTitle = document.getElementById("topTitle");
 
-    const TOPBAR_TITLE_LOGO_HTML = `<img src="images/sa-logo-5.jpg" class="topLogo" alt="SeoulAuction">`;
-    const TOPBAR_RIGHT_LOGO_HTML = `<img src="images/sa-logo-5.jpg" alt="SeoulAuction">`;
+    const TOPBAR_TITLE_LOGO_HTML = `<img src="images/sa-logo.jpg" class="topLogo" alt="SeoulAuction">`;
+    const TOPBAR_RIGHT_LOGO_HTML = `<img src="images/sa-logo.jpg" alt="SeoulAuction">`;
     const TOPBAR_CATALOG_SEARCH_HTML = `<input id="catalogSearch" class="catalogTopSearch" type="text" placeholder="" aria-label="검색">`;
 
     function setTopbarTitleLogo(){
