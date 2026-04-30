@@ -304,7 +304,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
           {
             id: "env-letter",
             name: "편지봉투",
-            size: "220*105mm",
+            size: "390*140*300mm",
             baseStock: 1000,
             img: "Letter-Envelope(Front).jpg",
             images: ["Letter-Envelope(Front).jpg","Letter-envelope(back).jpg"],
@@ -2010,7 +2010,7 @@ if(item.img && (!item.images || !item.images[0])){
                 : `<button class="mainHomeBtn requestDarkBtn" id="goRequestPage" type="button"> 신청하기</button>`
             }
             <button class="mainHomeBtn stockBtn" id="goStockPage" type="button">물품 재고현황</button>
-            <button class="mainHomeBtn shopHomeBtn" id="goShopPage" type="button">SA SHOP</button>
+            <button class="mainHomeBtn shopHomeBtn" id="goShopPage" type="button">제품 구매하기</button>
             <button class="mainHomeBtn logoutBtn" id="logoutBtn" type="button">로그아웃</button>
           </div>
         </div>
@@ -2203,7 +2203,7 @@ if(item.img && (!item.images || !item.images[0])){
           <div class="shopInner">
             <div class="shopHead">
               <h2 class="shopTitle">SHOP</h2>
-              <button class="shopLink" type="button" data-go-shop>SA SHOP <span>▶</span></button>
+              <button class="shopLink" type="button" data-go-shop>제품 구매하기 <span>▶</span></button>
             </div>
             <div class="shopGrid">
             ${(section.items || []).map(it => `
@@ -2223,7 +2223,7 @@ if(item.img && (!item.images || !item.images[0])){
       `;
     }
 
-    function prepareShopPage(title="SA SHOP"){
+    function prepareShopPage(title="제품 구매하기"){
       topbar.style.display = "flex";
       searchBox.style.display = "flex";
       setTopbarRightLogo();
@@ -2594,13 +2594,22 @@ if(item.img && (!item.images || !item.images[0])){
         btn.addEventListener("click", ()=>{ location.hash = "#/shop"; });
       });
       app.querySelectorAll("[data-shop-cart]").forEach(btn => {
-        btn.addEventListener("click", ()=>{ location.hash = "#/shop/cart"; });
+        btn.addEventListener("click", async ()=>{
+          const ok = await isAdminUser();
+          location.hash = ok ? "#/shop" : "#/shop/cart";
+        });
       });
       app.querySelectorAll("[data-shop-account]").forEach(btn => {
-        btn.addEventListener("click", ()=>{ location.hash = "#/shop/account"; });
+        btn.addEventListener("click", async ()=>{
+          const ok = await isAdminUser();
+          location.hash = ok ? "#/shop" : "#/shop/account";
+        });
       });
       app.querySelectorAll("[data-shop-orders]").forEach(btn => {
-        btn.addEventListener("click", ()=>{ location.hash = "#/shop/orders"; });
+        btn.addEventListener("click", async ()=>{
+          const ok = await isAdminUser();
+          location.hash = ok ? "#/shop" : "#/shop/orders";
+        });
       });
     }
 
@@ -4078,11 +4087,17 @@ const detailImagesHtml = detailImages.length
         if(ok) await renderShopAdminRequestsPage();
         else renderShopListPage();
       }else if(hash === "#/shop/account"){
-        renderShopAccountPage();
+        const ok = await isAdminUser();
+        if(ok) await renderShopAdminRequestsPage();
+        else renderShopAccountPage();
       }else if(hash === "#/shop/orders"){
-        renderShopOrdersPage();
+        const ok = await isAdminUser();
+        if(ok) await renderShopAdminRequestsPage();
+        else renderShopOrdersPage();
       }else if(hash === "#/shop/cart"){
-        renderShopCartPage();
+        const ok = await isAdminUser();
+        if(ok) await renderShopAdminRequestsPage();
+        else renderShopCartPage();
       }else if(adminShopItem){
         const ok = await isAdminUser();
         if(!ok){ alert("관리자 권한이 없습니다."); location.hash = "#/"; return; }
@@ -4292,11 +4307,17 @@ const detailImagesHtml = detailImages.length
       }else if(hash === "#/list"){
         renderHome("list");
       }else if(hash === "#/shop"){
-        renderShopListPage();
+        const ok = await isAdminUser();
+        if(ok) await renderShopAdminRequestsPage();
+        else renderShopListPage();
       }else if(hash === "#/shop/account"){
-        renderShopAccountPage();
+        const ok = await isAdminUser();
+        if(ok) await renderShopAdminRequestsPage();
+        else renderShopAccountPage();
       }else if(hash === "#/shop/cart"){
-        renderShopCartPage();
+        const ok = await isAdminUser();
+        if(ok) await renderShopAdminRequestsPage();
+        else renderShopCartPage();
       }else if(/^#\/shop\/item\//.test(hash)){
         return;
       }else if(hash === "#/request"){
