@@ -2010,7 +2010,7 @@ if(item.img && (!item.images || !item.images[0])){
                 : `<button class="mainHomeBtn requestDarkBtn" id="goRequestPage" type="button"> 신청하기</button>`
             }
             <button class="mainHomeBtn stockBtn" id="goStockPage" type="button">물품 재고현황</button>
-            <button class="mainHomeBtn shopHomeBtn" id="goShopPage" type="button">제품 구매하기</button>
+            <button class="mainHomeBtn shopHomeBtn" id="goShopPage" type="button">SA SHOP</button>
             <button class="mainHomeBtn logoutBtn" id="logoutBtn" type="button">로그아웃</button>
           </div>
         </div>
@@ -2203,7 +2203,7 @@ if(item.img && (!item.images || !item.images[0])){
           <div class="shopInner">
             <div class="shopHead">
               <h2 class="shopTitle">SHOP</h2>
-              <button class="shopLink" type="button" data-go-shop>제품 구매하기 <span>▶</span></button>
+              <button class="shopLink" type="button" data-go-shop>SA SHOP <span>▶</span></button>
             </div>
             <div class="shopGrid">
             ${(section.items || []).map(it => `
@@ -2223,7 +2223,7 @@ if(item.img && (!item.images || !item.images[0])){
       `;
     }
 
-    function prepareShopPage(title="제품 구매하기"){
+    function prepareShopPage(title="SA SHOP"){
       topbar.style.display = "flex";
       searchBox.style.display = "flex";
       setTopbarRightLogo();
