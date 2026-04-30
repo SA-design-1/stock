@@ -3449,16 +3449,16 @@ const detailImagesHtml = detailImages.length
         if(approveRequestsBtn){
           approveRequestsBtn.addEventListener("click", async ()=>{
             const rows = (it.requests || []).filter(r => selectedRequestKeys.has(r.__key));
-            const pendingRows = rows.filter(r => (r.status || "pending") === "pending");
-            if(pendingRows.length === 0){
-              alert("승인할 요청 내역을 선택해주세요.");
+            const approvableRows = rows.filter(r => ["pending", "rejected"].includes(r.status || "pending"));
+            if(approvableRows.length === 0){
+              alert("승인할 신청 또는 반려 내역을 선택해주세요.");
               return;
             }
 
             const approverEmail = await getCurrentUserEmail();
 
             try{
-              for(const r of pendingRows){
+              for(const r of approvableRows){
                 if(!r._dbid){
                   throw new Error("DB 요청 ID가 없습니다.");
                 }
@@ -4673,9 +4673,6 @@ async function approveCatalogRequestRow(catalogId, row, approvedBy){
   await upsertCatalogStockToDB(catalogId, year, round, nextStock);
   if(row._dbid) await updateCatalogRequestStatusById(row._dbid, "approved", approvedBy);
   row.status = "approved";
-  if (row.status !== "approved") {
-  // 승인 버튼 표시
-}
   row.approved_at = new Date().toISOString();
   row.approved_by = approvedBy || "";
   row.currentStock = nextStock;
@@ -4952,11 +4949,11 @@ async function renderCatalogDetail(catalogId){
     }));
     app.querySelector("#catalogApproveRequestsBtn")?.addEventListener("click", async ()=>{
       const currentRows = getCatalogRequests(catalogId);
-      const pendingRows = currentRows.filter(r => selectedRequestKeys.has(r.__key) && (r.status || "pending") === "pending");
-      if(!pendingRows.length){ alert("승인할 신청 내역을 선택해주세요."); return; }
+      const approvableRows = currentRows.filter(r => selectedRequestKeys.has(r.__key) && ["pending", "rejected"].includes(r.status || "pending"));
+      if(!approvableRows.length){ alert("승인할 신청 또는 반려 내역을 선택해주세요."); return; }
       const approverEmail = await getCurrentUserEmail();
       try{
-        for(const r of pendingRows) await approveCatalogRequestRow(catalogId, r, approverEmail || "");
+        for(const r of approvableRows) await approveCatalogRequestRow(catalogId, r, approverEmail || "");
         saveCatalogRequests(catalogId, currentRows);
         await syncCatalogRequestsFromDB(catalogId);
         selectedRequestKeys.clear();
