@@ -133,24 +133,32 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
 
     const STORAGE_KEY = "warehouse_stock_v1";
 
+    // 홈 화면 도록 메뉴 전용 고정 이미지
+    // 내부 상세페이지 galleryImages와 완전히 분리해서 사용함
+    const CATALOG_HOME_FIXED_IMAGES = {
+      "offline-auction": "images/sa-ca-01.png",
+      "contemporary-art-auction": "images/sa-ca-02.png",
+      "zero-base": "images/sa-ca-03.png"
+    };
+
     const CATALOG_MENU = [
       {
         id: "offline-auction",
-        label: "Major\nAuction",
+        label: "Major\\nAuction",
         theme: "light",
-        iconImg: "images/sa-icon-01.png"
+        iconImg: CATALOG_HOME_FIXED_IMAGES["offline-auction"]
       },
       {
         id: "contemporary-art-auction",
-        label: "Contemporary\nArt Sale",
+        label: "Contemporary\\nArt Sale",
         theme: "mint",
-        iconImg: "images/sa-icon-02.png"
+        iconImg: CATALOG_HOME_FIXED_IMAGES["contemporary-art-auction"]
       },
       {
         id: "zero-base",
-        label: "Zero\nBase",
+        label: "Zero\\nBase",
         theme: "light",
-        iconImg: "images/sa-icon-03.png"
+        iconImg: CATALOG_HOME_FIXED_IMAGES["zero-base"]
       }
     ];
 
@@ -159,10 +167,12 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     title: "도록 | Major Auction",
     yearPlaceholder: "연도",
     galleryImages: [
-      "images/2601_189.jpg",
-      "images/2602_190.jpg",
-      "images/sa-d-1.jpg",
-     
+      "images/1/2601_189.jpg",
+      "images/1/2602_190.jpg",
+      "images/1/2603_contem.jpg",
+      "images/1/sa-d-1.jpg",
+      "images/sa-ca-01.png",
+      "images/sa-ca-01.png"
     ],
     data: {
       "2031": [],
@@ -179,10 +189,12 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     title: "도록 | Contemporary Art Sale",
     yearPlaceholder: "연도",
     galleryImages: [
-      "images/sa-d-2.jpg",
-      "images/sa-d-4.jpg",
-      "images/sa-d-9.jpg",
-     
+      "images/sa-ca-02.png",
+      "images/sa-ca-02.png",
+      "images/sa-ca-02.png",
+      "images/sa-ca-02.png",
+      "images/sa-ca-02.png",
+      "images/sa-ca-02.png"
     ],
     data: {
       "2031": [],
@@ -199,9 +211,12 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     title: "도록 | Zero Base",
     yearPlaceholder: "연도",
     galleryImages: [
-      "images/sa-d-13.jpg",
-      "images/sa-d-10.jpg",
-      "images/sa-d-11.jpg",
+      "images/sa-ca-03.png",
+      "images/sa-ca-03.png",
+      "images/sa-ca-03.png",
+      "images/sa-ca-03.png",
+      "images/sa-ca-03.png",
+      "images/sa-ca-03.png"
     ],
     data: {
       "2031": [],
@@ -754,27 +769,14 @@ const navReload = document.getElementById("navReload");
       `;
     }
 
-    
-    const CATALOG_HOME_IMAGES = {
-      "offline-auction": [],
-      "contemporary-art-auction": [],
-      "zero-base": []
-    };
 
-    function getLatestCatalogHomeImage(catalogId){
-      const list = CATALOG_HOME_IMAGES[String(catalogId || "")];
-      if(!Array.isArray(list) || !list.length) return "";
-      return list[list.length - 1] || "";
+    function getCatalogHomeFixedImage(catalogId){
+      return CATALOG_HOME_FIXED_IMAGES[String(catalogId || "")] || "";
     }
 
 function renderCatalogMenuImage(item){
-      const fixedImages = {
-        "offline-auction": "images/sa-ca-01.png",
-        "contemporary-art-auction": "images/sa-ca-02.png",
-        "zero-base": "images/sa-ca-03.png"
-      };
       const id = String(item?.id || "");
-      const img = fixedImages[id] || getLatestCatalogHomeImage(id);
+      const img = getCatalogHomeFixedImage(id);
       if(img){
         return `<img src="${escapeAttr(img)}" alt="${escapeAttr(item?.label || "")}" class="catalogMenuThumbImg">`;
       }
@@ -2659,7 +2661,7 @@ function renderCatalogDetail(catalogId){
 
               <div class="detailSectionBlock">
                 <div class="boxTitleRow detailSectionHead">
-                  <p class="boxTitle">출고 신청 내역</p>
+                  <p class="boxTitle">신청 내역</p>
                   <div class="requestAdminActions">
                     <button class="selDelBtn" id="catalogBulkDeleteRequests" type="button">삭제</button>
                   </div>
@@ -3203,7 +3205,7 @@ const detailImagesHtml = detailImages.length
 
               <div class="detailSectionBlock">
                 <div class="boxTitleRow detailSectionHead">
-                  <p class="boxTitle">출고 신청 내역</p>
+                  <p class="boxTitle">신청 내역</p>
                   ${(isRequest || isAdmin) ? `
                     <div class="requestAdminActions">
                       ${isAdmin ? `<button class="selDelBtn reqApproveBtn" id="approveRequestsBtn" type="button">승인</button>
@@ -4288,10 +4290,10 @@ function renderCatalogDetail(catalogId){
             <div class="catalogGalleryGrid catalogGridView">${galleryHtml}</div>`}
         </div>
 
-        ${isRoundSelected ? `
+        ${true ? `
         <div class="detailSectionBlock">
           <div class="boxTitleRow detailSectionHead">
-            <p class="boxTitle">출고 신청 내역</p>
+            <p class="boxTitle">신청 내역</p>
             <div class="requestAdminActions"><button class="selDelBtn" id="catalogBulkDeleteRequests" type="button">삭제</button></div>
           </div>
           <div class="logBox requestLogBox requestTable">
@@ -4805,10 +4807,10 @@ async function renderCatalogDetail(catalogId){
           ${viewMode === "result" ? `<div class="catalogResultView">${resultCards(currentYear, activeRound)}</div>` : `<div class="catalogGalleryGrid catalogGridView">${galleryHtml}</div>`}
         </div>
 
-        ${isRoundSelected ? `
+        ${true ? `
         <div class="detailSectionBlock">
           <div class="boxTitleRow detailSectionHead">
-            <p class="boxTitle">출고 신청 내역</p>
+            <p class="boxTitle">신청 내역</p>
             <div class="requestAdminActions">
               ${isAdmin ? `<button class="selDelBtn reqApproveBtn" id="catalogApproveRequestsBtn" type="button">승인</button><button class="selDelBtn reqRejectBtn" id="catalogRejectRequestsBtn" type="button">반려</button>` : ``}
               <button class="selDelBtn" id="catalogBulkDeleteRequests" type="button">삭제</button>
