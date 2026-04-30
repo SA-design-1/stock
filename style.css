@@ -4851,3 +4851,75 @@ body.mode-list .stockStatusQty{
   .shopAdminDetailHero{ grid-template-columns:118px minmax(0,1fr); gap:18px; }
   .shopAdminDetailImg{ width:118px; height:106px; }
 }
+
+/* ===== SHOP 주문신청/승인 후 주문조회 구조 ===== */
+.shopOrderNotice{
+  display:inline-block;
+  margin-left:8px;
+  font-size:11px;
+  font-weight:500;
+  color:#777;
+  letter-spacing:-0.03em;
+}
+
+.shopOrderState{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:max-content;
+  min-width:68px;
+  height:24px;
+  margin-top:8px;
+  padding:0 9px;
+  border:1px solid #dddddd;
+  font-size:12px;
+  font-weight:700;
+  color:#555;
+  background:#fafafa;
+}
+
+.shopOrderState.pending{
+  border-color:#d8d8d8;
+  color:#555;
+  background:#f7f7f7;
+}
+
+.shopOrderState.approved{
+  border-color:#bfe7e4;
+  color:#21aaa5;
+  background:#f1fbfa;
+}
+
+.shopOrderState.rejected{
+  border-color:#ffd4d4;
+  color:#c63e3e;
+  background:#fff5f5;
+}
+
+.shopOrderDeleteBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:58px;
+  height:28px;
+  margin-top:8px;
+  border:1px solid #d8d8d8;
+  background:#fff;
+  color:#444;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.shopOrderDeleteBtn:hover{
+  background:#292929;
+  border-color:#292929;
+  color:#fff;
+}
+
+@media (max-width:640px){
+  .shopOrderNotice{
+    display:block;
+    margin:4px 0 0;
+  }
+}

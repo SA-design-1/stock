@@ -403,7 +403,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
           {
             id: "bag-black-small",
             name: "흑지쇼핑백(小)",
-            size: "390*140*300mm",
+            size: "200*105mm",
             baseStock: 1000,
             img: "Black-Shopping-Bag(S).jpg",
             images: ["Black-Shopping-Bag(S).jpg", "Black-Shopping-Bag.jpg"],
@@ -2252,7 +2252,7 @@ if(item.img && (!item.images || !item.images[0])){
     }
 
     function renderShopListPage(){
-      prepareShopPage("SA SHOP");
+      prepareShopPage("제품 구매하기");
       const shopKeyword = String(q?.value || "").trim().toLowerCase();
       const items = getShopItems().filter(it => {
         if(!shopKeyword) return true;
@@ -2291,8 +2291,9 @@ if(item.img && (!item.images || !item.images[0])){
               <svg viewBox="0 0 24 24"><path d="M12 12.2c2.25 0 4.05-1.86 4.05-4.15C16.05 5.78 14.25 4 12 4S7.95 5.78 7.95 8.05c0 2.29 1.8 4.15 4.05 4.15Z"/><path d="M5.8 21c.62-3.72 2.98-5.8 6.2-5.8s5.58 2.08 6.2 5.8"/></svg>
             </div>
             <div class="shopAccountTitle">MY PAGE</div>
-            <div class="shopAccountSub">제품 구매 내역과 장바구니를 확인할 수 있습니다.</div>
+            <div class="shopAccountSub">주문 신청, 승인된 주문 내역과 장바구니를 확인할 수 있습니다.</div>
             <div class="shopAccountMenu">
+              <button type="button" data-shop-order-requests>주문신청</button>
               <button type="button" data-shop-orders>주문조회</button>
               <button type="button" data-shop-cart>장바구니</button>
               <button type="button" data-shop-home>제품 목록</button>
@@ -2305,7 +2306,7 @@ if(item.img && (!item.images || !item.images[0])){
 
     function renderShopDetailPage(itemId){
       const it = getShopItemById(itemId);
-      prepareShopPage("SA SHOP");
+      prepareShopPage("제품 구매하기");
       if(!it){
         app.innerHTML = `<div class="paper"><div class="paper-body">제품을 찾을 수 없습니다.</div></div>`;
         return;
@@ -2349,7 +2350,7 @@ if(item.img && (!item.images || !item.images[0])){
     }
 
     function renderShopCartPage(){
-      prepareShopPage("SA SHOP");
+      prepareShopPage("제품 구매하기");
       const cart = getShopCart();
       const rows = cart.map(row => ({ ...row, item:getShopItemById(row.id) })).filter(row => row.item);
       app.innerHTML = `
@@ -2407,16 +2408,119 @@ if(item.img && (!item.images || !item.images[0])){
           await submitShopOrder(rows);
           saveShopCart([]);
           await loadAllFromDB_FORCE().catch(()=>{});
-          location.hash = "#/shop/orders";
+          location.hash = "#/shop/order-requests";
         }catch(err){
           alert("구매 신청 등록 실패: " + (err?.message || err));
         }
       });
     }
 
-    function renderShopOrdersPage(){
-      prepareShopPage("주문조회");
+    function getSyncedShopOrderHistory(){
       const history = getShopOrderHistory();
+      const requestByDbId = new Map();
+      getShopRequestRows().forEach(r => {
+        if(r._dbid) requestByDbId.set(String(r._dbid), r);
+      });
+
+      let changed = false;
+      const synced = history.map(order => ({
+        ...order,
+        rows: (order.rows || []).map(row => {
+          const req = row.requestDbId ? requestByDbId.get(String(row.requestDbId)) : null;
+          const nextStatus = req ? (req.status || "pending") : (row.status || "pending");
+          if(nextStatus !== row.status) changed = true;
+          return { ...row, status: nextStatus };
+        })
+      })).filter(order => (order.rows || []).length);
+
+      if(changed) saveShopOrderHistory(synced);
+      return synced;
+    }
+
+    function shopOrderStatusLabel(status){
+      if(status === "approved") return "승인완료";
+      if(status === "rejected") return "반려";
+      return "승인대기";
+    }
+
+    async function deleteShopOrderRequest(row){
+      if(!row?.requestDbId) throw new Error("삭제할 주문 신청 ID가 없습니다.");
+      const it = getShopItemById(row.id);
+      if(!it) throw new Error("제품 정보를 찾을 수 없습니다.");
+      await deleteRequestsByKeys(it.id, [{ _dbid: row.requestDbId }]);
+
+      const history = getShopOrderHistory()
+        .map(order => ({
+          ...order,
+          rows: (order.rows || []).filter(r => String(r.requestDbId || "") !== String(row.requestDbId || ""))
+        }))
+        .filter(order => (order.rows || []).length);
+      saveShopOrderHistory(history);
+    }
+
+    async function renderShopOrderRequestsPage(){
+      prepareShopPage("주문신청");
+      await loadAllFromDB_FORCE().catch(()=>{});
+      const history = getSyncedShopOrderHistory().map(order => ({
+        ...order,
+        rows: (order.rows || []).filter(row => (row.status || "pending") !== "approved")
+      })).filter(order => (order.rows || []).length);
+      const total = history.reduce((sum, order)=> sum + (order.rows || []).reduce((s,r)=>s + Number(r.price || 0) * Number(r.qty || 0), 0), 0);
+      app.innerHTML = `
+        <div class="shopPage shopOrdersPage shopOrderRequestsPage">
+          ${renderShopPageHeader("주문신청", "account")}
+          <h2 class="shopSubTitle">주문신청</h2>
+          <div class="shopOrderHistoryList">
+            ${history.length ? history.map(order => `
+              <div class="shopOrderGroup">
+                <div class="shopOrderNo">${escapeHtml(order.orderNo || "주문번호")} <span class="shopOrderNotice">관리자 승인 후 주문조회에 반영됩니다.</span></div>
+                ${(order.rows || []).map(row => {
+                  const lineTotal = Number(row.price || 0) * Number(row.qty || 0);
+                  const canDelete = (row.status || "pending") === "pending";
+                  return `
+                    <div class="shopOrderRow">
+                      <div class="shopOrderThumb">${row.img ? renderSmartImage(row.img, row.name) : iconPlaceholder()}</div>
+                      <div class="shopOrderInfo">
+                        <div class="shopOrderName">${escapeHtml(getShopDisplayName(row))}</div>
+                        <div class="shopOrderColor">${escapeHtml(row.color || "-")}</div>
+                        <div class="shopOrderLine"></div>
+                        <div class="shopOrderMeta"><span>${Number(row.qty || 0)}개</span><em>${escapeHtml(formatPrice(row.price || 0))} KRW</em></div>
+                        <div class="shopOrderTotal">${escapeHtml(formatPrice(lineTotal))} KRW</div>
+                        <div class="shopOrderState ${escapeAttr(row.status || "pending")}">${escapeHtml(shopOrderStatusLabel(row.status || "pending"))}</div>
+                        ${canDelete ? `<button class="shopOrderDeleteBtn" type="button" data-shop-order-delete="${escapeAttr(row.requestDbId || "")}">삭제</button>` : ``}
+                      </div>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            `).join("") : `<div class="shopCartEmpty">주문 신청 내역이 없습니다.</div>`}
+          </div>
+          ${history.length ? `<div class="shopGrandTotal"><span>총 신청 금액</span><strong>${escapeHtml(formatPrice(total))} KRW</strong></div>` : ``}
+        </div>
+      `;
+      bindShopCommonEvents();
+      app.querySelectorAll("[data-shop-order-delete]").forEach(btn => btn.addEventListener("click", async ()=>{
+        const id = btn.dataset.shopOrderDelete;
+        const target = history.flatMap(o => o.rows || []).find(r => String(r.requestDbId || "") === String(id || ""));
+        if(!target) return;
+        if(!confirm("이 주문 신청을 삭제하시겠습니까?")) return;
+        try{
+          await deleteShopOrderRequest(target);
+          await loadAllFromDB_FORCE().catch(()=>{});
+          renderShopOrderRequestsPage();
+        }catch(err){
+          alert("주문 신청 삭제 실패: " + (err?.message || err));
+        }
+      }));
+    }
+
+    async function renderShopOrdersPage(){
+      prepareShopPage("주문조회");
+      await loadAllFromDB_FORCE().catch(()=>{});
+      const history = getSyncedShopOrderHistory().map(order => ({
+        ...order,
+        rows: (order.rows || []).filter(row => (row.status || "pending") === "approved")
+      })).filter(order => (order.rows || []).length);
       const total = history.reduce((sum, order)=> sum + (order.rows || []).reduce((s,r)=>s + Number(r.price || 0) * Number(r.qty || 0), 0), 0);
       app.innerHTML = `
         <div class="shopPage shopOrdersPage">
@@ -2437,12 +2541,13 @@ if(item.img && (!item.images || !item.images[0])){
                         <div class="shopOrderLine"></div>
                         <div class="shopOrderMeta"><span>${Number(row.qty || 0)}개</span><em>${escapeHtml(formatPrice(row.price || 0))} KRW</em></div>
                         <div class="shopOrderTotal">${escapeHtml(formatPrice(lineTotal))} KRW</div>
+                        <div class="shopOrderState approved">승인완료</div>
                       </div>
                     </div>
                   `;
                 }).join("")}
               </div>
-            `).join("") : `<div class="shopCartEmpty">주문 신청 내역이 없습니다.</div>`}
+            `).join("") : `<div class="shopCartEmpty">승인 완료된 주문 내역이 없습니다.</div>`}
           </div>
           ${history.length ? `<div class="shopGrandTotal"><span>총 주문 금액</span><strong>${escapeHtml(formatPrice(total))} KRW</strong></div>` : ``}
         </div>
@@ -2598,6 +2703,9 @@ if(item.img && (!item.images || !item.images[0])){
       });
       app.querySelectorAll("[data-shop-account]").forEach(btn => {
         btn.addEventListener("click", ()=>{ location.hash = "#/shop/account"; });
+      });
+      app.querySelectorAll("[data-shop-order-requests]").forEach(btn => {
+        btn.addEventListener("click", ()=>{ location.hash = "#/shop/order-requests"; });
       });
       app.querySelectorAll("[data-shop-orders]").forEach(btn => {
         btn.addEventListener("click", ()=>{ location.hash = "#/shop/orders"; });
@@ -4079,8 +4187,10 @@ const detailImagesHtml = detailImages.length
         else renderShopListPage();
       }else if(hash === "#/shop/account"){
         renderShopAccountPage();
+      }else if(hash === "#/shop/order-requests"){
+        await renderShopOrderRequestsPage();
       }else if(hash === "#/shop/orders"){
-        renderShopOrdersPage();
+        await renderShopOrdersPage();
       }else if(hash === "#/shop/cart"){
         renderShopCartPage();
       }else if(adminShopItem){
@@ -4295,6 +4405,10 @@ const detailImagesHtml = detailImages.length
         renderShopListPage();
       }else if(hash === "#/shop/account"){
         renderShopAccountPage();
+      }else if(hash === "#/shop/order-requests"){
+        return;
+      }else if(hash === "#/shop/orders"){
+        return;
       }else if(hash === "#/shop/cart"){
         renderShopCartPage();
       }else if(/^#\/shop\/item\//.test(hash)){
