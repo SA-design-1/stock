@@ -2650,52 +2650,6 @@ if(item.img && (!item.images || !item.images[0])){
       `;
     }
 
-
-    function renderStockShopSummary(keyword = ""){
-      const search = String(keyword || "").trim().toLowerCase();
-      const items = getShopItems().filter(it => {
-        if(!search) return true;
-        const hay = `${it.name || ""} ${it.size || ""} ${it.price || ""} ${getShopColorLabel(it) || ""}`.toLowerCase();
-        return hay.includes(search);
-      });
-
-      if(!items.length) return "";
-
-      return `
-        <section class="stockShopSection" aria-label="SHOP 제품 재고">
-          <div class="stockShopInner">
-            <div class="stockShopHead">
-              <div class="stockShopTitle">
-                <span>SHOP</span>
-                <em>|</em>
-                <small>Product</small>
-              </div>
-              <div class="stockShopRight">재고</div>
-            </div>
-
-            <div class="stockShopGrid">
-              ${items.map(it => {
-                const stock = Number(calcStock(it) || 0);
-                return `
-                  <div class="stockShopCard" data-stock-shop-id="${escapeAttr(it.id)}">
-                    <div class="stockShopThumb">
-                      ${it.img ? renderSmartImage(it.img, it.name) : iconPlaceholder()}
-                    </div>
-                    <div class="stockShopInfo">
-                      <div class="stockShopName">${escapeHtml(getShopDisplayName(it))}</div>
-                      <div class="stockShopColor">${escapeHtml(getShopColorLabel(it))}</div>
-                      <div class="stockShopPrice">${escapeHtml(formatPrice(parsePrice(it.price)))}</div>
-                    </div>
-                    <div class="stockShopQty">${Number.isFinite(stock) ? `${stock.toLocaleString()}<small>개</small>` : `-`}</div>
-                  </div>
-                `;
-              }).join("")}
-            </div>
-          </div>
-        </section>
-      `;
-    }
-
     function renderHome(mode = "request"){
       applyCustomItemOrder();
       topbar.style.display = "flex";
@@ -2717,7 +2671,7 @@ if(item.img && (!item.images || !item.images[0])){
         });
 
         if(filtered.length === 0) return "";
-        if(section.category === "기타" && !isStockMode){
+        if(section.category === "기타"){
           return renderShopSection({ ...section, items: filtered });
         }
 
@@ -2725,7 +2679,7 @@ if(item.img && (!item.images || !item.images[0])){
           <div class="section">
             <div class="secHead">
               <div class="secHeadTitle">
-                <h2>${escapeHtml(isStockMode && section.category === "기타" ? "SHOP" : section.category)}</h2>
+                <h2>${escapeHtml(section.category)}</h2>
               </div>
               ${mode === "admin" && sectionIndex === 0 ? `
                 <div class="secHeadAction">
@@ -2820,8 +2774,7 @@ if(item.img && (!item.images || !item.images[0])){
 
       // 도록 신청하기 자체 제거: 신청/관리자/재고현황 홈에서 도록 영역을 표시하지 않음
       const catalogMenuHtml = "";
-      const stockShopHtml = "";
-      app.innerHTML = (catalogMenuHtml + sectionsHtml + stockShopHtml) || `
+      app.innerHTML = (catalogMenuHtml + sectionsHtml) || `
         <div class="paper">
           <div class="paper-head">안내</div>
           <div class="paper-body">등록된 품목이 없습니다.</div>
