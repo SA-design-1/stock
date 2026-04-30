@@ -169,7 +169,10 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     galleryImages: [
       "images/1/2601_189.jpg",
       "images/1/2602_190.jpg",
-      "images/1/2603_contem.jpg"
+      "images/1/2603_contem.jpg",
+      "images/1/sa-d-1.jpg",
+      "images/sa-ca-01.png",
+      "images/sa-ca-01.png"
     ],
     data: {
       "2031": [],
@@ -186,9 +189,12 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     title: "도록 | Contemporary Art Sale",
     yearPlaceholder: "연도",
     galleryImages: [
-      "images/1/2603_contem.jpg",
       "images/sa-ca-02.png",
-      "images/2603_contem.jpg"
+      "images/sa-ca-02.png",
+      "images/sa-ca-02.png",
+      "images/sa-ca-02.png",
+      "images/sa-ca-02.png",
+      "images/sa-ca-02.png"
     ],
     data: {
       "2031": [],
@@ -205,8 +211,11 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     title: "도록 | Zero Base",
     yearPlaceholder: "연도",
     galleryImages: [
-      "images/2604_191.jpg",
-      "images/1/2604_191.jpg",
+      "images/sa-ca-03.png",
+      "images/sa-ca-03.png",
+      "images/sa-ca-03.png",
+      "images/sa-ca-03.png",
+      "images/sa-ca-03.png",
       "images/sa-ca-03.png"
     ],
     data: {
@@ -767,7 +776,7 @@ const navReload = document.getElementById("navReload");
 
 function renderCatalogMenuImage(item){
       const id = String(item?.id || "");
-      const img = (typeof CATALOG_HOME_FIXED_IMAGES !== "undefined" ? CATALOG_HOME_FIXED_IMAGES[id] : "") || "";
+      const img = getCatalogHomeFixedImage(id);
       if(img){
         return `<img src="${escapeAttr(img)}" alt="${escapeAttr(item?.label || "")}" class="catalogMenuThumbImg">`;
       }
@@ -2350,7 +2359,7 @@ if(item.img && (!item.images || !item.images[0])){
 
       const keyword = (q.value || "").trim().toLowerCase();
       const isStockMode = mode === "list";
-      const showCatalogMenu = !keyword;
+      const showCatalogMenu = false; // 도록 신청하기/도록 메뉴 전체 비노출
 
       const sectionsHtml = data.map((section, sectionIndex) => {
         const filtered = (section.items||[]).filter(it => {
@@ -2460,9 +2469,8 @@ if(item.img && (!item.images || !item.images[0])){
         `;
       }).join("");
 
-      const catalogMenuHtml = showCatalogMenu
-        ? (isStockMode ? renderStockCatalogSummary() : (mode === "admin" ? renderAdminCatalogSummary() : renderCatalogMenu()))
-        : "";
+      // 도록 신청하기 자체 제거: 신청/관리자/재고현황 홈에서 도록 영역을 표시하지 않음
+      const catalogMenuHtml = "";
       app.innerHTML = (catalogMenuHtml + sectionsHtml) || `
         <div class="paper">
           <div class="paper-head">안내</div>
@@ -2652,7 +2660,7 @@ function renderCatalogDetail(catalogId){
 
               <div class="detailSectionBlock">
                 <div class="boxTitleRow detailSectionHead">
-                  <p class="boxTitle">출고 신청 내역</p>
+                  <p class="boxTitle">신청 내역</p>
                   <div class="requestAdminActions">
                     <button class="selDelBtn" id="catalogBulkDeleteRequests" type="button">삭제</button>
                   </div>
@@ -3196,7 +3204,7 @@ const detailImagesHtml = detailImages.length
 
               <div class="detailSectionBlock">
                 <div class="boxTitleRow detailSectionHead">
-                  <p class="boxTitle">출고 신청 내역</p>
+                  <p class="boxTitle">신청 내역</p>
                   ${(isRequest || isAdmin) ? `
                     <div class="requestAdminActions">
                       ${isAdmin ? `<button class="selDelBtn reqApproveBtn" id="approveRequestsBtn" type="button">승인</button>
@@ -3782,19 +3790,13 @@ const detailImagesHtml = detailImages.length
         }
         renderHome("request");
       }else if(requestCatalogApply){
-        const ok = await isAdminUser();
-        if(ok){
-          location.hash = "#/admin";
-          return;
-        }
-        renderCatalogApplyPage(decodeURIComponent(requestCatalogApply[1]));
+        // 도록 신청하기 제거: 기존 링크/북마크로 접근해도 신청 페이지로 돌려보냄
+        location.hash = "#/request";
+        return;
       }else if(requestCatalog){
-        const ok = await isAdminUser();
-        if(ok){
-          location.hash = "#/admin";
-          return;
-        }
-        renderCatalogDetail(decodeURIComponent(requestCatalog[1]));
+        // 도록 신청하기 제거: 기존 링크/북마크로 접근해도 신청 페이지로 돌려보냄
+        location.hash = "#/request";
+        return;
       }else if(hash === "#/list"){
         renderHome("list");
       }else if(hash === "#/admin"){
@@ -4281,10 +4283,10 @@ function renderCatalogDetail(catalogId){
             <div class="catalogGalleryGrid catalogGridView">${galleryHtml}</div>`}
         </div>
 
-        ${isRoundSelected ? `
+        ${true ? `
         <div class="detailSectionBlock">
           <div class="boxTitleRow detailSectionHead">
-            <p class="boxTitle">출고 신청 내역</p>
+            <p class="boxTitle">신청 내역</p>
             <div class="requestAdminActions"><button class="selDelBtn" id="catalogBulkDeleteRequests" type="button">삭제</button></div>
           </div>
           <div class="logBox requestLogBox requestTable">
@@ -4770,11 +4772,12 @@ async function renderCatalogDetail(catalogId){
     const catalogCurrentStock = Math.max(0, baseCatalogStock - approvedOutQty);
 
     const galleryImages = Array.isArray(config.galleryImages) && config.galleryImages.length
-      ? [...new Set(config.galleryImages.filter(Boolean))].slice(0, 3)
-      : [];
-    const galleryHtml = galleryImages.length
-      ? galleryImages.map((imagePath, idx) => `<button class="catalogGalleryItem" type="button" data-catalog-cover="${idx}">${renderSmartImage(imagePath, `${config.title || "Catalog"} ${idx + 1}`)}</button>`).join("")
-      : `<div class="catalogGalleryPlaceholder">IMAGE</div>`;
+      ? config.galleryImages
+      : ["images/2601_189.jpg","images/2602_190.jpg","images/2603_contem.jpg","images/2604_191.jpg"];
+    const galleryHtml = Array.from({ length: 12 }, (_, idx) => {
+      const imagePath = galleryImages[idx % galleryImages.length] || "";
+      return `<button class="catalogGalleryItem" type="button" data-catalog-cover="${idx}">${imagePath ? renderSmartImage(imagePath, `${config.title || "Catalog"} ${idx + 1}`) : `<div class="catalogGalleryPlaceholder">IMAGE</div>`}</button>`;
+    }).join("");
     const yearOptions = [`<option value="">연도</option>`, ...yearList.map(year => `<option value="${escapeAttr(year)}" ${currentYear === year ? "selected" : ""}>${escapeHtml(year)}</option>`)].join("");
     const roundOptions = [`<option value="">-</option>`, ...roundList.map(round => `<option value="${escapeAttr(round)}" ${activeRound === round ? "selected" : ""}>${escapeHtml(round)}</option>`)].join("");
 
@@ -4797,10 +4800,10 @@ async function renderCatalogDetail(catalogId){
           ${viewMode === "result" ? `<div class="catalogResultView">${resultCards(currentYear, activeRound)}</div>` : `<div class="catalogGalleryGrid catalogGridView">${galleryHtml}</div>`}
         </div>
 
-        ${isRoundSelected ? `
+        ${true ? `
         <div class="detailSectionBlock">
           <div class="boxTitleRow detailSectionHead">
-            <p class="boxTitle">출고 신청 내역</p>
+            <p class="boxTitle">신청 내역</p>
             <div class="requestAdminActions">
               ${isAdmin ? `<button class="selDelBtn reqApproveBtn" id="catalogApproveRequestsBtn" type="button">승인</button><button class="selDelBtn reqRejectBtn" id="catalogRejectRequestsBtn" type="button">반려</button>` : ``}
               <button class="selDelBtn" id="catalogBulkDeleteRequests" type="button">삭제</button>
