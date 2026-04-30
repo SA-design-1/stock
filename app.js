@@ -504,7 +504,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
             img:"SA-bag.jpg",
             images:["SA-bag.jpg"],
             logs:[],
-            price:"24,700원"
+            price:"24,000원"
           }
         ]
       }
@@ -2040,7 +2040,6 @@ if(item.img && (!item.images || !item.images[0])){
     }
 
     const SHOP_CART_KEY = "sa_shop_cart_v1";
-    const SHOP_ORDERS_KEY = "sa_shop_orders_v1";
 
     function getShopCart(){
       try{
@@ -2055,35 +2054,143 @@ if(item.img && (!item.images || !item.images[0])){
       localStorage.setItem(SHOP_CART_KEY, JSON.stringify(cart || []));
     }
 
-    function getShopOrders(){
-      try{
-        const parsed = JSON.parse(localStorage.getItem(SHOP_ORDERS_KEY) || "[]");
-        return Array.isArray(parsed) ? parsed : [];
-      }catch(e){
-        return [];
+
+    function getShopPendingRequests(){
+      const rows = [];
+      for(const it of getShopItems()){
+        ensureRequests(it);
+        for(const r of (it.requests || [])){
+          rows.push({ item:it, request:r });
+        }
       }
+      return rows.sort((a,b)=>String(b.request.d||"").localeCompare(String(a.request.d||"")));
     }
 
-    function saveShopOrders(rows){
-      localStorage.setItem(SHOP_ORDERS_KEY, JSON.stringify(rows || []));
+    async function submitShopOrderRows(rows){
+      const email = await getCurrentUserEmail();
+      const today = new Date().toISOString();
+
+      for(const row of rows){
+        const it = row.item;
+        const qty = Number(row.qty || 0);
+        if(!it || qty <= 0) continue;
+
+        const localReq = normalizeLog({
+          d: today,
+          t: "신청",
+          dept: "제품구매",
+          person: email || "구매 신청자",
+          qty,
+          status: "pending",
+          email: email || "",
+          __key: `shop_req_${Date.now()}_${Math.random().toString(16).slice(2)}`
+        });
+
+        try{
+          const inserted = await addRequestToDB(it, localReq);
+          if(inserted?.id){
+            localReq._dbid = inserted.id;
+            localReq.__key = `req_${inserted.id}`;
+            localReq.d = inserted.created_at || localReq.d;
+          }
+        }catch(err){
+          console.error("제품 구매 신청 DB 저장 실패:", err);
+        }
+
+        ensureRequests(it);
+        it.requests.unshift(localReq);
+      }
+
+      saveAllLocal();
     }
 
-    function addShopOrdersFromCart(cart){
-      const now = new Date().toISOString();
-      const rows = (cart || []).map(row => {
-        const item = getShopItemById(row.id);
-        if(!item) return null;
-        return {
-          id:"shop_order_" + Date.now() + "_" + Math.random().toString(16).slice(2),
-          itemId:item.id,
-          qty:Number(row.qty || 1),
-          status:"pending",
-          createdAt:now
-        };
-      }).filter(Boolean);
-      if(!rows.length) return [];
-      saveShopOrders([...rows, ...getShopOrders()]);
-      return rows;
+    async function approveShopPurchase(itemId, requestKey){
+      const it = getShopItemById(itemId);
+      if(!it) return;
+      ensureRequests(it);
+      const req = (it.requests || []).find(r => String(r.__key) === String(requestKey));
+      if(!req || (req.status || "pending") !== "pending") return;
+
+      const approverEmail = await getCurrentUserEmail();
+
+      if(req._dbid){
+        await approveRequestByRpc(req._dbid, approverEmail || "");
+        await loadAllFromDB_FORCE();
+        return;
+      }
+
+      req.status = "approved";
+      req.approved_at = new Date().toISOString();
+      req.approved_by = approverEmail || "";
+      const logRow = normalizeLog({
+        d: new Date().toISOString(),
+        t: "출고",
+        dept: req.dept || "제품구매",
+        person: req.person || "",
+        qty: Number(req.qty || 0),
+        __key: `shop_log_${Date.now()}_${Math.random().toString(16).slice(2)}`
+      });
+      ensureLogs(it);
+      it.logs.unshift(logRow);
+      saveAllLocal();
+    }
+
+    async function rejectShopPurchase(itemId, requestKey){
+      const it = getShopItemById(itemId);
+      if(!it) return;
+      ensureRequests(it);
+      const req = (it.requests || []).find(r => String(r.__key) === String(requestKey));
+      if(!req || (req.status || "pending") !== "pending") return;
+
+      const approverEmail = await getCurrentUserEmail();
+      if(req._dbid){
+        await rejectRequestByRpc(req._dbid, approverEmail || "");
+        await loadAllFromDB_FORCE();
+        return;
+      }
+
+      req.status = "rejected";
+      req.rejected_at = new Date().toISOString();
+      req.rejected_by = approverEmail || "";
+      saveAllLocal();
+    }
+
+    function renderAdminShopRequests(){
+      const rows = getShopPendingRequests().filter(row => (row.request.status || "pending") === "pending");
+      return `
+        <section class="adminShopRequestSection">
+          <div class="adminShopRequestTitle">구매 신청내역</div>
+          <div class="adminShopRequestList">
+            ${rows.length ? rows.map(({ item:it, request:req }) => {
+              const qty = Number(req.qty || 0);
+              const unit = parsePrice(it.price);
+              const total = unit * qty;
+              return `
+                <div class="adminShopRequestCard" data-shop-request-card>
+                  <div class="adminShopRequestThumb">${it.img ? renderSmartImage(it.img, it.name) : iconPlaceholder()}</div>
+                  <div class="adminShopRequestInfo">
+                    <div class="adminShopRequestName">${escapeHtml(String(it.name || '').replace('(B)','').replace('(W)',''))}</div>
+                    <div class="adminShopRequestColor">${escapeHtml(getShopColorLabel(it))}</div>
+                    <div class="adminShopRequestLine"></div>
+                    <div class="adminShopRequestMeta">
+                      <span>신청 1건</span>
+                      <span>승인 필요</span>
+                    </div>
+                    <div class="adminShopRequestBottom">
+                      <strong>${qty.toLocaleString()}개</strong>
+                      <strong>${escapeHtml(formatPrice(total))}원</strong>
+                    </div>
+                    <div class="adminShopRequestActions">
+                      <button type="button" data-shop-approve="${escapeAttr(it.id)}" data-req-key="${escapeAttr(req.__key)}">승인</button>
+                      <button type="button" data-shop-reject="${escapeAttr(it.id)}" data-req-key="${escapeAttr(req.__key)}">반려</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join("") : `<div class="adminShopRequestEmpty">구매 신청내역이 없습니다.</div>`}
+          </div>
+        </section>
+      `;
     }
 
     function parsePrice(v){
@@ -2265,11 +2372,7 @@ if(item.img && (!item.images || !item.images[0])){
       });
     }
 
-    async function renderShopCartPage(){
-      if(await isAdminUser()){
-        renderAdminShopOrdersPage();
-        return;
-      }
+    function renderShopCartPage(){
       prepareShopPage("제품 구매하기");
       const cart = getShopCart();
       const rows = cart.map(row => ({ ...row, item:getShopItemById(row.id) })).filter(row => row.item);
@@ -2323,46 +2426,23 @@ if(item.img && (!item.images || !item.images[0])){
         saveShopCart(cart);
         renderShopCartPage();
       }));
-      document.getElementById("shopOrderBtn")?.addEventListener("click", ()=>{
-        const created = addShopOrdersFromCart(getShopCart());
-        if(!created.length){
-          alert("신청할 제품이 없습니다.");
+      document.getElementById("shopOrderBtn")?.addEventListener("click", async ()=>{
+        const latestCart = getShopCart();
+        const orderRows = latestCart.map(row => ({ ...row, item:getShopItemById(row.id) })).filter(row => row.item && Number(row.qty || 0) > 0);
+        if(!orderRows.length){
+          alert("장바구니가 비어 있습니다.");
           return;
         }
-        saveShopCart([]);
-        alert("구매 신청이 등록되었습니다.");
-        location.hash = "#/shop";
+        try{
+          await submitShopOrderRows(orderRows);
+          saveShopCart([]);
+          alert("구매 신청이 등록되었습니다. 관리자 승인 후 재고에 반영됩니다.");
+          renderShopCartPage();
+        }catch(err){
+          console.error(err);
+          alert("구매 신청 등록 중 오류가 발생했습니다.");
+        }
       });
-    }
-
-    function renderAdminShopOrdersPage(){
-      prepareShopPage("구매 신청내역");
-      const orders = getShopOrders();
-      const rows = orders.map(row => ({ ...row, item:getShopItemById(row.itemId) })).filter(row => row.item);
-
-      app.innerHTML = 
-        `<div class="shopPage shopAdminOrdersPage">
-          ${renderShopPageHeader("구매 신청내역", "cart")}
-          <h2 class="shopAdminOrdersTitle">구매 신청내역</h2>
-          <div class="shopAdminOrderList">
-            ${rows.length ? rows.map(row => {
-              const it = row.item;
-              const qty = Number(row.qty || 1);
-              const price = parsePrice(it.price) * qty;
-              return `<div class="shopAdminOrderRow" data-order-id="${escapeAttr(row.id)}">
-                  <div class="shopAdminOrderThumb">${it.img ? renderSmartImage(it.img, it.name) : iconPlaceholder()}</div>
-                  <div class="shopAdminOrderInfo">
-                    <div class="shopAdminOrderName">${escapeHtml(String(it.name || '').replace('(B)','').replace('(W)',''))}</div>
-                    <div class="shopAdminOrderColor">${escapeHtml(getShopColorLabel(it))}</div>
-                    <div class="shopAdminOrderLine"></div>
-                    <div class="shopAdminOrderMeta"><span>신청 1건</span><span>승인 필요</span></div>
-                    <div class="shopAdminOrderBottom"><strong>${qty}개</strong><strong>${escapeHtml(formatPrice(price))}원</strong></div>
-                  </div>
-                </div>`;
-            }).join("") : `<div class="shopCartEmpty">구매 신청내역이 없습니다.</div>`}
-          </div>
-        </div>`;
-      bindShopCommonEvents();
     }
 
     function bindShopCommonEvents(){
@@ -2442,6 +2522,8 @@ if(item.img && (!item.images || !item.images[0])){
 
         if(filtered.length === 0) return "";
         if(section.category === "기타"){
+          if(mode === "admin") return renderAdminShopRequests();
+          if(mode === "request" || mode === "list") return "";
           return renderShopSection({ ...section, items: filtered });
         }
 
@@ -2552,6 +2634,32 @@ if(item.img && (!item.images || !item.images[0])){
       `;
 
       bindShopCommonEvents();
+
+      app.querySelectorAll("[data-shop-approve]").forEach(btn => {
+        btn.addEventListener("click", async (e)=>{
+          e.stopPropagation();
+          try{
+            await approveShopPurchase(btn.dataset.shopApprove, btn.dataset.reqKey);
+            renderHome("admin");
+          }catch(err){
+            console.error(err);
+            alert("승인 처리 중 오류가 발생했습니다. 재고 또는 DB 설정을 확인해주세요.");
+          }
+        });
+      });
+
+      app.querySelectorAll("[data-shop-reject]").forEach(btn => {
+        btn.addEventListener("click", async (e)=>{
+          e.stopPropagation();
+          try{
+            await rejectShopPurchase(btn.dataset.shopReject, btn.dataset.reqKey);
+            renderHome("admin");
+          }catch(err){
+            console.error(err);
+            alert("반려 처리 중 오류가 발생했습니다.");
+          }
+        });
+      });
 
       const sectionAddItemBtn = document.getElementById("sectionAddItemBtn");
       if(sectionAddItemBtn){
@@ -3852,7 +3960,7 @@ const detailImagesHtml = detailImages.length
       }else if(hash === "#/shop/account"){
         renderShopAccountPage();
       }else if(hash === "#/shop/cart"){
-        await renderShopCartPage();
+        renderShopCartPage();
       }else if(shopItem){
         renderShopDetailPage(decodeURIComponent(shopItem[1]));
       }else if(hash === "#/request"){
@@ -4062,7 +4170,7 @@ const detailImagesHtml = detailImages.length
       }else if(hash === "#/shop/account"){
         renderShopAccountPage();
       }else if(hash === "#/shop/cart"){
-        await renderShopCartPage();
+        renderShopCartPage();
       }else if(/^#\/shop\/item\//.test(hash)){
         return;
       }else if(hash === "#/request"){
