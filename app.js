@@ -304,7 +304,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
           {
             id: "env-letter",
             name: "편지봉투",
-            size: "390*140*300mm",
+            size: "220*105mm",
             baseStock: 1000,
             img: "Letter-Envelope(Front).jpg",
             images: ["Letter-Envelope(Front).jpg","Letter-envelope(back).jpg"],
@@ -2010,7 +2010,7 @@ if(item.img && (!item.images || !item.images[0])){
                 : `<button class="mainHomeBtn requestDarkBtn" id="goRequestPage" type="button"> 신청하기</button>`
             }
             <button class="mainHomeBtn stockBtn" id="goStockPage" type="button">물품 재고현황</button>
-            <button class="mainHomeBtn shopHomeBtn" id="goShopPage" type="button">제품 구매하기</button>
+            <button class="mainHomeBtn shopHomeBtn" id="goShopPage" type="button">SA SHOP</button>
             <button class="mainHomeBtn logoutBtn" id="logoutBtn" type="button">로그아웃</button>
           </div>
         </div>
@@ -2203,7 +2203,7 @@ if(item.img && (!item.images || !item.images[0])){
           <div class="shopInner">
             <div class="shopHead">
               <h2 class="shopTitle">SHOP</h2>
-              <button class="shopLink" type="button" data-go-shop>제품 구매하기 <span>▶</span></button>
+              <button class="shopLink" type="button" data-go-shop>SA SHOP <span>▶</span></button>
             </div>
             <div class="shopGrid">
             ${(section.items || []).map(it => `
@@ -2223,7 +2223,7 @@ if(item.img && (!item.images || !item.images[0])){
       `;
     }
 
-    function prepareShopPage(title="제품 구매하기"){
+    function prepareShopPage(title="SA SHOP"){
       topbar.style.display = "flex";
       searchBox.style.display = "flex";
       setTopbarRightLogo();
@@ -2252,7 +2252,7 @@ if(item.img && (!item.images || !item.images[0])){
     }
 
     function renderShopListPage(){
-      prepareShopPage("제품 구매하기");
+      prepareShopPage("SA SHOP");
       const shopKeyword = String(q?.value || "").trim().toLowerCase();
       const items = getShopItems().filter(it => {
         if(!shopKeyword) return true;
@@ -2305,7 +2305,7 @@ if(item.img && (!item.images || !item.images[0])){
 
     function renderShopDetailPage(itemId){
       const it = getShopItemById(itemId);
-      prepareShopPage("제품 구매하기");
+      prepareShopPage("SA SHOP");
       if(!it){
         app.innerHTML = `<div class="paper"><div class="paper-body">제품을 찾을 수 없습니다.</div></div>`;
         return;
@@ -2349,7 +2349,7 @@ if(item.img && (!item.images || !item.images[0])){
     }
 
     function renderShopCartPage(){
-      prepareShopPage("제품 구매하기");
+      prepareShopPage("SA SHOP");
       const cart = getShopCart();
       const rows = cart.map(row => ({ ...row, item:getShopItemById(row.id) })).filter(row => row.item);
       app.innerHTML = `
@@ -2594,22 +2594,13 @@ if(item.img && (!item.images || !item.images[0])){
         btn.addEventListener("click", ()=>{ location.hash = "#/shop"; });
       });
       app.querySelectorAll("[data-shop-cart]").forEach(btn => {
-        btn.addEventListener("click", async ()=>{
-          const ok = await isAdminUser();
-          location.hash = ok ? "#/shop" : "#/shop/cart";
-        });
+        btn.addEventListener("click", ()=>{ location.hash = "#/shop/cart"; });
       });
       app.querySelectorAll("[data-shop-account]").forEach(btn => {
-        btn.addEventListener("click", async ()=>{
-          const ok = await isAdminUser();
-          location.hash = ok ? "#/shop" : "#/shop/account";
-        });
+        btn.addEventListener("click", ()=>{ location.hash = "#/shop/account"; });
       });
       app.querySelectorAll("[data-shop-orders]").forEach(btn => {
-        btn.addEventListener("click", async ()=>{
-          const ok = await isAdminUser();
-          location.hash = ok ? "#/shop" : "#/shop/orders";
-        });
+        btn.addEventListener("click", ()=>{ location.hash = "#/shop/orders"; });
       });
     }
 
@@ -4087,17 +4078,11 @@ const detailImagesHtml = detailImages.length
         if(ok) await renderShopAdminRequestsPage();
         else renderShopListPage();
       }else if(hash === "#/shop/account"){
-        const ok = await isAdminUser();
-        if(ok) await renderShopAdminRequestsPage();
-        else renderShopAccountPage();
+        renderShopAccountPage();
       }else if(hash === "#/shop/orders"){
-        const ok = await isAdminUser();
-        if(ok) await renderShopAdminRequestsPage();
-        else renderShopOrdersPage();
+        renderShopOrdersPage();
       }else if(hash === "#/shop/cart"){
-        const ok = await isAdminUser();
-        if(ok) await renderShopAdminRequestsPage();
-        else renderShopCartPage();
+        renderShopCartPage();
       }else if(adminShopItem){
         const ok = await isAdminUser();
         if(!ok){ alert("관리자 권한이 없습니다."); location.hash = "#/"; return; }
@@ -4307,17 +4292,11 @@ const detailImagesHtml = detailImages.length
       }else if(hash === "#/list"){
         renderHome("list");
       }else if(hash === "#/shop"){
-        const ok = await isAdminUser();
-        if(ok) await renderShopAdminRequestsPage();
-        else renderShopListPage();
+        renderShopListPage();
       }else if(hash === "#/shop/account"){
-        const ok = await isAdminUser();
-        if(ok) await renderShopAdminRequestsPage();
-        else renderShopAccountPage();
+        renderShopAccountPage();
       }else if(hash === "#/shop/cart"){
-        const ok = await isAdminUser();
-        if(ok) await renderShopAdminRequestsPage();
-        else renderShopCartPage();
+        renderShopCartPage();
       }else if(/^#\/shop\/item\//.test(hash)){
         return;
       }else if(hash === "#/request"){
