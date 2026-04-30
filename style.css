@@ -4518,14 +4518,17 @@ body.mode-list .stockStatusQty{
 }
 
 
-/* catalog 신청하기 상세 이미지: 반복 없이 3개만 한 줄 표시 */
+/* PATCH: 도록 신청하기 내부 이미지는 반복 없이 3개만 표시 */
 .catalogGalleryGrid.catalogGridView{
-  grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 32px 36px !important;
 }
-
-@media (max-width:640px){
+.catalogGalleryGrid.catalogGridView .catalogGalleryItem{
+  width:100% !important;
+}
+@media (max-width: 760px){
   .catalogGalleryGrid.catalogGridView{
-    grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
-    gap:14px !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px !important;
   }
 }

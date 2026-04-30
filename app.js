@@ -206,7 +206,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
     yearPlaceholder: "연도",
     galleryImages: [
       "images/2604_191.jpg",
-      "images/1/sa-d-1.jpg",
+      "images/1/2604_191.jpg",
       "images/sa-ca-03.png"
     ],
     data: {
@@ -767,7 +767,7 @@ const navReload = document.getElementById("navReload");
 
 function renderCatalogMenuImage(item){
       const id = String(item?.id || "");
-      const img = getCatalogHomeFixedImage(id);
+      const img = (typeof CATALOG_HOME_FIXED_IMAGES !== "undefined" ? CATALOG_HOME_FIXED_IMAGES[id] : "") || "";
       if(img){
         return `<img src="${escapeAttr(img)}" alt="${escapeAttr(item?.label || "")}" class="catalogMenuThumbImg">`;
       }
@@ -4770,11 +4770,11 @@ async function renderCatalogDetail(catalogId){
     const catalogCurrentStock = Math.max(0, baseCatalogStock - approvedOutQty);
 
     const galleryImages = Array.isArray(config.galleryImages) && config.galleryImages.length
-      ? config.galleryImages.slice(0, 3)
-      : ["images/2601_189.jpg","images/2602_190.jpg","images/2603_contem.jpg"];
-    const galleryHtml = galleryImages.map((imagePath, idx) => {
-      return `<button class="catalogGalleryItem" type="button" data-catalog-cover="${idx}">${imagePath ? renderSmartImage(imagePath, `${config.title || "Catalog"} ${idx + 1}`) : `<div class="catalogGalleryPlaceholder">IMAGE</div>`}</button>`;
-    }).join("");
+      ? [...new Set(config.galleryImages.filter(Boolean))].slice(0, 3)
+      : [];
+    const galleryHtml = galleryImages.length
+      ? galleryImages.map((imagePath, idx) => `<button class="catalogGalleryItem" type="button" data-catalog-cover="${idx}">${renderSmartImage(imagePath, `${config.title || "Catalog"} ${idx + 1}`)}</button>`).join("")
+      : `<div class="catalogGalleryPlaceholder">IMAGE</div>`;
     const yearOptions = [`<option value="">연도</option>`, ...yearList.map(year => `<option value="${escapeAttr(year)}" ${currentYear === year ? "selected" : ""}>${escapeHtml(year)}</option>`)].join("");
     const roundOptions = [`<option value="">-</option>`, ...roundList.map(round => `<option value="${escapeAttr(round)}" ${activeRound === round ? "selected" : ""}>${escapeHtml(round)}</option>`)].join("");
 
