@@ -1930,26 +1930,38 @@ if(item.img && (!item.images || !item.images[0])){
       return;
     }
 
+    const resetBtn = document.getElementById("resetPasswordBtn");
+    if(resetBtn) resetBtn.disabled = true;
+    setAuthError("처리 중입니다.");
+
     try{
       const res = await fetch(
-  "https://iznnctfnmeiqdjljounq.supabase.co/functions/v1/admin-reset-password",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-reset-secret": "sa-reset-2026-abc123"
-    },
-    body: JSON.stringify({
-      email,
-      new_password: newPassword
-    })
-  }
-);
+        "https://iznnctfnmeiqdjljounq.supabase.co/functions/v1/admin-reset-password",
+        {
+          method: "POST",
+          mode: "cors",
+          cache: "no-store",
+          headers: {
+            "Content-Type": "application/json",
+            "x-reset-secret": "sa-reset-2026-abc123"
+          },
+          body: JSON.stringify({
+            email,
+            new_password: newPassword
+          })
+        }
+      );
 
-      const result = await res.json().catch(() => ({}));
+      const text = await res.text();
+      let result = {};
+      try{
+        result = text ? JSON.parse(text) : {};
+      }catch(parseErr){
+        console.error("[reset] JSON 파싱 실패:", parseErr, text);
+      }
 
       if(!res.ok || !result?.success){
-        setAuthError(result?.message || "비밀번호 재설정에 실패했습니다.");
+        setAuthError(result?.message || `비밀번호 재설정에 실패했습니다. (${res.status})`);
         return;
       }
 
@@ -1959,7 +1971,9 @@ if(item.img && (!item.images || !item.images[0])){
       }, 1000);
     }catch(err){
       console.error("[reset] 예외 발생:", err);
-      setAuthError(err?.message || "비밀번호 재설정 중 오류가 발생했습니다.");
+      setAuthError("서버 연결에 실패했습니다. Edge Function CORS/배포/Secrets 설정을 확인해주세요.");
+    }finally{
+      if(resetBtn) resetBtn.disabled = false;
     }
   }
 
