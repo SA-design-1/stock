@@ -4851,3 +4851,75 @@ body.mode-list .stockStatusQty{
   .shopAdminDetailHero{ grid-template-columns:118px minmax(0,1fr); gap:18px; }
   .shopAdminDetailImg{ width:118px; height:106px; }
 }
+
+
+/* ===== SHOP 신청자 정보 입력/표시 ===== */
+.shopRequesterBox{
+  margin:26px 0 0;
+  border:1px solid #d8d8d8;
+  background:#fff;
+  padding:20px 22px;
+}
+.shopRequesterTitle{
+  margin-bottom:14px;
+  font-size:14px;
+  font-weight:700;
+  color:#222;
+  letter-spacing:-0.03em;
+}
+.shopRequesterGrid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:14px;
+}
+.shopRequesterField{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.shopRequesterField span{
+  font-size:12px;
+  font-weight:600;
+  color:#666;
+}
+.shopRequesterField input{
+  width:100%;
+  height:38px;
+  border:1px solid #d8d8d8;
+  border-radius:0;
+  padding:0 12px;
+  font-size:13px;
+  font-family:inherit;
+  outline:none;
+}
+.shopRequesterField input:focus{
+  border-color:#222;
+}
+.shopOrderRequester,
+.shopAdminRequester{
+  font-size:12px;
+  color:#666;
+  letter-spacing:-0.03em;
+}
+.shopOrderRequester{
+  margin:4px 0 12px;
+}
+.shopAdminRequester{
+  margin:3px 0 6px;
+}
+.shopAdminMiniHead,
+.shopAdminMiniRow{
+  grid-template-columns:44px minmax(92px,1fr) minmax(70px,.8fr) minmax(98px,1fr) minmax(88px,1fr) minmax(78px,.8fr) !important;
+}
+.shopAdminMiniRow.noCheck{
+  grid-template-columns:minmax(92px,1fr) minmax(70px,.8fr) minmax(98px,1fr) minmax(88px,1fr) minmax(78px,.8fr) !important;
+}
+@media (max-width:640px){
+  .shopRequesterGrid{ grid-template-columns:1fr; }
+  .shopRequesterBox{ padding:18px 16px; }
+  .shopAdminMiniHead,
+  .shopAdminMiniRow,
+  .shopAdminMiniRow.noCheck{
+    min-width:620px;
+  }
+}
