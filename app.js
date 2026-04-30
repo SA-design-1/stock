@@ -4673,6 +4673,9 @@ async function approveCatalogRequestRow(catalogId, row, approvedBy){
   await upsertCatalogStockToDB(catalogId, year, round, nextStock);
   if(row._dbid) await updateCatalogRequestStatusById(row._dbid, "approved", approvedBy);
   row.status = "approved";
+  if (row.status !== "approved") {
+  // 승인 버튼 표시
+}
   row.approved_at = new Date().toISOString();
   row.approved_by = approvedBy || "";
   row.currentStock = nextStock;
