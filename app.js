@@ -138,19 +138,19 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
         id: "offline-auction",
         label: "Major\nAuction",
         theme: "light",
-        iconImg: "images/2601_189.jpg"
+        iconImg: "images/sa-icon-01.png"
       },
       {
         id: "contemporary-art-auction",
         label: "Contemporary\nArt Sale",
         theme: "mint",
-        iconImg: "images/2603_contem.jpg"
+        iconImg: "images/sa-icon-02.png"
       },
       {
         id: "zero-base",
         label: "Zero\nBase",
         theme: "light",
-        iconImg: "images/2604_191.jpg"
+        iconImg: "images/sa-icon-03.png"
       }
     ];
 
