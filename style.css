@@ -4923,3 +4923,57 @@ body.mode-list .stockStatusQty{
     margin:4px 0 0;
   }
 }
+
+/* shop 관리자 상세 보정 */
+.shopPageTitleBtn{
+  border:0;
+  background:transparent;
+  padding:0;
+  margin:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font:inherit;
+  color:inherit;
+  cursor:pointer;
+}
+.shopAdminBaseStockEdit{
+  margin-top:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.shopAdminBaseStockBtn,
+.shopAdminBaseStockForm button{
+  min-width:74px;
+  height:30px;
+  padding:0 10px;
+  border:1px solid #d7d7d7;
+  background:#fff;
+  color:#111;
+  font-size:11px;
+  cursor:pointer;
+}
+.shopAdminBaseStockForm{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.shopAdminBaseStockForm[hidden]{display:none !important;}
+.shopAdminBaseStockForm input{
+  width:110px;
+  height:30px;
+  border:1px solid #d7d7d7;
+  padding:0 8px;
+  font-size:11px;
+}
+.shopAdminMiniEmpty{
+  min-height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#888;
+  font-size:10px;
+  border-bottom:1px solid #eee;
+}

@@ -2264,7 +2264,7 @@ if(item.img && (!item.images || !item.images[0])){
       const cartCount = getShopCart().reduce((sum, row)=>sum + Number(row.qty || 0), 0);
       return `
         <div class="shopPageHead">
-          <div class="shopPageTitle"><strong>제품</strong><span>|</span><em>Product</em></div>
+          <button class="shopPageTitle shopPageTitleBtn" type="button" data-shop-home><strong>제품</strong><span>|</span><em>Product</em></button>
           <div class="shopPageIcons">
             <button class="shopIconBtn ${active === 'account' ? 'active' : ''}" type="button" data-shop-account title="마이페이지" aria-label="마이페이지">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12.2c2.25 0 4.05-1.86 4.05-4.15C16.05 5.78 14.25 4 12 4S7.95 5.78 7.95 8.05c0 2.29 1.8 4.15 4.05 4.15Z"/><path d="M5.8 21c.62-3.72 2.98-5.8 6.2-5.8s5.58 2.08 6.2 5.8"/></svg>
@@ -2626,7 +2626,7 @@ if(item.img && (!item.images || !item.images[0])){
   const status = r.status || "pending";
   return status === "pending" || status === "rejected";
 });
-      const logRows = (it.logs || []).filter(r => r.dept === "SHOP" || r.person === "SHOP" || String(r.person || '').includes('@'));
+      const logRows = (it.logs || []).filter(r => r.t === '출고' || r.t === '입고');
       app.innerHTML = `
         <div class="shopPage shopAdminDetailPage">
           ${renderShopPageHeader("구매 신청내역", "cart")}
@@ -2638,6 +2638,14 @@ if(item.img && (!item.images || !item.images[0])){
               <div class="shopAdminDetailColor">${escapeHtml(getShopColorLabel(it))}</div>
               <div class="shopAdminDetailLine"></div>
               <div class="shopAdminStock"><span>현재 재고</span><strong>${Number(calcStock(it) || 0).toLocaleString()}개</strong></div>
+              <div class="shopAdminBaseStockEdit">
+                <button class="shopAdminBaseStockBtn" id="shopEditBaseStockBtn" type="button">기준재고 <b>${Number(it.baseStock || 0).toLocaleString()}</b>개</button>
+                <div class="shopAdminBaseStockForm" id="shopBaseStockEditRow" hidden>
+                  <input id="shopBaseStockInput" inputmode="numeric" value="${Number(it.baseStock || 0)}" />
+                  <button type="button" id="shopSaveBaseStockBtn">저장</button>
+                  <button type="button" id="shopCancelBaseStockBtn">취소</button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="shopAdminTableTitleRow">
@@ -2649,27 +2657,49 @@ if(item.img && (!item.images || !item.images[0])){
             </div>
           </div>
           <div class="shopAdminMiniTable">
-            <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>전채 부서</span><span>전채 상태</span></div>
+            <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>전체 부서</span><span>전체 상태</span></div>
             ${requestRows.length ? requestRows.map(r => `
               <label class="shopAdminMiniRow">
                 <input type="checkbox" data-shop-req="${escapeAttr(r.__key)}" checked>
                 <span>${escapeHtml(formatKRDate(r.d))}</span><span>신청</span><span>${escapeHtml(r.dept || '-')}</span><span>${escapeHtml(getShopRequestBadgeText(r))}</span>
               </label>
-            `).join("") : `<div class="shopAdminMiniEmpty"></div><div class="shopAdminMiniEmpty"></div>`}
+            `).join("") : `<div class="shopAdminMiniEmpty">반영된 내역이 없습니다.</div>`}
           </div>
           <div class="shopAdminTableTitleRow shopAdminLogTitleRow">
             <h3>입출고 내역</h3>
             <div class="shopAdminActions"><button type="button">삭제</button></div>
           </div>
           <div class="shopAdminMiniTable">
-            <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>전채 부서</span><span>전채 상태</span></div>
+            <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>전체 부서</span><span>전체 상태</span></div>
             ${logRows.length ? logRows.map(r => `
               <div class="shopAdminMiniRow noCheck"><span>${escapeHtml(formatKRDate(r.d))}</span><span>${escapeHtml(r.t || '-')}</span><span>${escapeHtml(r.dept || '-')}</span><span>${Number(r.qty || 0)}개</span></div>
-            `).join("") : `<div class="shopAdminMiniEmpty"></div><div class="shopAdminMiniEmpty"></div>`}
+            `).join("") : `<div class="shopAdminMiniEmpty">반영된 내역이 없습니다.</div>`}
           </div>
         </div>
       `;
       bindShopCommonEvents();
+      const shopEditBaseStockBtn = document.getElementById("shopEditBaseStockBtn");
+      const shopBaseStockEditRow = document.getElementById("shopBaseStockEditRow");
+      const shopBaseStockInput = document.getElementById("shopBaseStockInput");
+      const shopSaveBaseStockBtn = document.getElementById("shopSaveBaseStockBtn");
+      const shopCancelBaseStockBtn = document.getElementById("shopCancelBaseStockBtn");
+      shopEditBaseStockBtn?.addEventListener("click", ()=>{
+        if(shopBaseStockEditRow) shopBaseStockEditRow.hidden = false;
+        shopBaseStockInput?.focus();
+      });
+      shopCancelBaseStockBtn?.addEventListener("click", ()=>{
+        if(shopBaseStockEditRow) shopBaseStockEditRow.hidden = true;
+        if(shopBaseStockInput) shopBaseStockInput.value = String(Number(it.baseStock || 0));
+      });
+      shopSaveBaseStockBtn?.addEventListener("click", async ()=>{
+        try{
+          await updateItemBaseStock(it.id, shopBaseStockInput?.value || 0);
+          await loadAllFromDB_FORCE().catch(()=>{});
+          renderShopAdminDetailPage(itemId);
+        }catch(err){
+          alert("기준재고 저장 실패: " + (err?.message || err));
+        }
+      });
       const selectedRows = () => requestRows.filter(r => app.querySelector(`[data-shop-req="${CSS.escape(r.__key)}"]`)?.checked);
       document.getElementById("shopApproveBtn")?.addEventListener("click", async ()=>{
         const rows = selectedRows();
