@@ -2879,7 +2879,7 @@ function renderCatalogDetail(catalogId){
       }
 
       const allDepts = [
-        "경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"
+        "경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","경매팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"
       ];
 
       let reqDateFilter = "";
@@ -3291,7 +3291,7 @@ function renderCatalogApplyPage(catalogId){
       const currentStock = Number(saved?.currentStock ?? config.currentStock ?? 0);
 
       const allDepts = [
-        "경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"
+        "경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","경매팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"
       ];
 
       app.innerHTML = `
@@ -3434,7 +3434,7 @@ function renderCatalogApplyPage(catalogId){
       let selectedLogKeys = new Set();
 
       const allDepts = [
-        "경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀","인사팀","관재팀","재무팀",
+        "경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","경매팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀","인사팀","관재팀","재무팀",
       ];
 
       let reqDeptFilter = "전체";
@@ -4528,7 +4528,7 @@ function renderCatalogDetail(catalogId){
     return;
   }
 
-  const allDepts = ["경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
+  const allDepts = ["경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","경매팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
   let reqDateFilter = "";
   let reqDeptFilter = "전체";
   let reqStatusFilter = "전체";
@@ -4875,7 +4875,7 @@ function renderCatalogDetail(catalogId){
     let modal = document.getElementById("stockCatalogApplyModal");
     if(modal) return modal;
 
-    const depts = ["경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
+    const depts = ["경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","경매팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
 
     modal = document.createElement("div");
     modal.className = "modal stockCatalogApplyModal";
@@ -5077,7 +5077,7 @@ async function renderCatalogDetail(catalogId){
     return;
   }
 
-  const allDepts = ["경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
+  const allDepts = ["경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","경매팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
   let selectedRequestKeys = new Set();
   let selectedLogKeys = new Set();
   let viewMode = sessionStorage.getItem(`catalog_view_${catalogId}`) || "gallery";
