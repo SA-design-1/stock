@@ -1437,30 +1437,56 @@ if(item.img && (!item.images || !item.images[0])){
       return true;
     }
 
+    const ITEM_IMAGE_BUCKET = "warehouse-item-images";
+
+    function getSafeImageExt(file){
+      const byName = String(file?.name || "").split(".").pop() || "";
+      const byType = String(file?.type || "").split("/").pop() || "";
+      const raw = (byName || byType || "jpg").toLowerCase();
+      const safe = raw.replace(/[^a-z0-9]/g, "");
+      if(safe === "jpeg") return "jpg";
+      if(["jpg", "png", "webp", "gif"].includes(safe)) return safe;
+      return "jpg";
+    }
+
     async function uploadItemImage(file, itemId){
       if(!supabaseClient) throw new Error("supabaseClient not ready");
       if(!file) return null;
 
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-      const safeExt = ext.replace(/[^a-z0-9]/g, "") || "jpg";
-      const filePath = `items/${itemId}-${Date.now()}.${safeExt}`;
+      if(!String(file.type || "").startsWith("image/")){
+        throw new Error("이미지 파일만 업로드할 수 있습니다.");
+      }
+
+      // Supabase Storage 기본 제한과 화면 로딩 속도를 고려해 10MB 이하만 허용
+      if(Number(file.size || 0) > 10 * 1024 * 1024){
+        throw new Error("이미지 용량은 10MB 이하로 업로드해주세요.");
+      }
+
+      const safeExt = getSafeImageExt(file);
+      const safeItemId = String(itemId || `item-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g, "-");
+      const filePath = `items/${safeItemId}-${Date.now()}.${safeExt}`;
 
       const { error: uploadError } = await supabaseClient
         .storage
-        .from("warehouse-item-images")
+        .from(ITEM_IMAGE_BUCKET)
         .upload(filePath, file, {
           cacheControl: "3600",
-          upsert: false
+          upsert: true,
+          contentType: file.type || `image/${safeExt}`
         });
 
       if(uploadError) throw uploadError;
 
       const { data: publicUrlData } = supabaseClient
         .storage
-        .from("warehouse-item-images")
+        .from(ITEM_IMAGE_BUCKET)
         .getPublicUrl(filePath);
 
-      return publicUrlData?.publicUrl || null;
+      if(!publicUrlData?.publicUrl){
+        throw new Error("이미지 공개 URL 생성에 실패했습니다.");
+      }
+
+      return publicUrlData.publicUrl;
     }
 
     async function saveItemToDB(item, categoryName){
@@ -4271,18 +4297,31 @@ const detailImagesHtml = detailImages.length
     itemClose?.addEventListener("click", closeItemModal);
 
     createItemBtn?.addEventListener("click", async ()=>{
+      if(createItemBtn.dataset.loading === "1") return;
+      createItemBtn.dataset.loading = "1";
+      createItemBtn.disabled = true;
+      const originalCreateItemText = createItemBtn.textContent;
+      createItemBtn.textContent = "저장 중...";
+
+      const resetCreateItemButton = () => {
+        createItemBtn.dataset.loading = "0";
+        createItemBtn.disabled = false;
+        createItemBtn.textContent = originalCreateItemText || "추가";
+      };
+
+      try{
       const category = (nCategory?.value || "").trim();
       const name = (nName?.value || "").trim();
       const size = (nSize?.value || "").trim();
       const base = Number(String(nBase?.value || "").replace(/,/g,""));
       const imageFile = nImgFile?.files?.[0] || null;
 
-      if(!category){ alert("카테고리를 입력해주세요."); return; }
-      if(!name){ alert("품목명을 입력해주세요."); return; }
-      if(!Number.isFinite(base) || base < 0){ alert("기준재고는 0 이상 숫자여야 합니다."); return; }
+      if(!category){ alert("카테고리를 입력해주세요."); resetCreateItemButton(); return; }
+      if(!name){ alert("품목명을 입력해주세요."); resetCreateItemButton(); return; }
+      if(!Number.isFinite(base) || base < 0){ alert("기준재고는 0 이상 숫자여야 합니다."); resetCreateItemButton(); return; }
 
       const sec = ensureCategory(category);
-      if(!sec){ alert("카테고리 생성에 실패했습니다."); return; }
+      if(!sec){ alert("카테고리 생성에 실패했습니다."); resetCreateItemButton(); return; }
 
       const baseId = slugifyId(`${category}-${name}-${size}`);
       let id = baseId;
@@ -4298,7 +4337,8 @@ const detailImagesHtml = detailImages.length
           uploadedImageUrl = await uploadItemImage(imageFile, id);
         }catch(err){
           console.error(err);
-          alert("이미지 업로드에 실패했습니다.\nStorage 버킷/권한 설정을 확인해주세요.");
+          alert("이미지 업로드에 실패했습니다.\nSupabase SQL Editor에서 13_item_image_upload_storage.sql을 먼저 실행해주세요.\n\n상세: " + (err?.message || err));
+          resetCreateItemButton();
           return;
         }
       }
@@ -4341,7 +4381,13 @@ const detailImagesHtml = detailImages.length
 
       if(q) q.value = "";
       location.hash = "#/admin";
+      resetCreateItemButton();
       router();
+      }catch(err){
+        console.error(err);
+        alert("품목 추가 처리 중 오류가 발생했습니다.\n" + (err?.message || err));
+        resetCreateItemButton();
+      }
     });
 
     doSearch?.addEventListener("click", async ()=>{
