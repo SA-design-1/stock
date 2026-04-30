@@ -304,7 +304,7 @@ const SUPABASE_URL = "https://iznnctfnmeiqdjljounq.supabase.co";
           {
             id: "env-letter",
             name: "편지봉투",
-            size: "390*140*300mm",
+            size: "220*105mm",
             baseStock: 1000,
             img: "Letter-Envelope(Front).jpg",
             images: ["Letter-Envelope(Front).jpg","Letter-envelope(back).jpg"],
@@ -2128,13 +2128,8 @@ if(item.img && (!item.images || !item.images[0])){
       return `${key.slice(0,4)}-${m}-${day} (${key}-${String(count).padStart(5,'0')})`;
     }
 
-    async function submitShopOrder(rows, requester={}){
+    async function submitShopOrder(rows){
       if(!rows || !rows.length) return null;
-      const dept = String(requester.dept || "").trim();
-      const person = String(requester.person || "").trim();
-      if(!dept) throw new Error("부서를 입력해주세요.");
-      if(!person) throw new Error("이름을 입력해주세요.");
-
       const orderNo = makeShopOrderNo();
       const createdAt = new Date().toISOString();
       const requesterEmail = await getCurrentUserEmail();
@@ -2147,12 +2142,10 @@ if(item.img && (!item.images || !item.images[0])){
         const reqRow = normalizeLog({
           d: createdAt,
           t: "신청",
-          dept,
-          person,
+          dept: "SHOP",
+          person: requesterEmail || "제품 구매",
           qty,
-          status: "pending",
-          email: requesterEmail || "",
-          orderNo
+          status: "pending"
         });
         try{
           const inserted = await addRequestToDB(it, reqRow);
@@ -2177,9 +2170,6 @@ if(item.img && (!item.images || !item.images[0])){
           price: parsePrice(it.price),
           qty,
           status: "pending",
-          dept,
-          person,
-          email: requesterEmail || "",
           requestDbId: reqRow._dbid || null
         });
       }
@@ -2390,22 +2380,7 @@ if(item.img && (!item.images || !item.images[0])){
               `;
             }).join("") : `<div class="shopCartEmpty">장바구니가 비어 있습니다.</div>`}
           </div>
-          ${rows.length ? `
-            <div class="shopRequesterBox">
-              <div class="shopRequesterTitle">신청자 정보</div>
-              <div class="shopRequesterGrid">
-                <label class="shopRequesterField">
-                  <span>부서</span>
-                  <input id="shopOrderDept" type="text" placeholder="예) 디자인팀" autocomplete="organization">
-                </label>
-                <label class="shopRequesterField">
-                  <span>이름</span>
-                  <input id="shopOrderPerson" type="text" placeholder="예) 손영실" autocomplete="name">
-                </label>
-              </div>
-            </div>
-            <button class="shopOrderBtn" type="button" id="shopOrderBtn">ORDER</button>
-          ` : ``}
+          ${rows.length ? `<button class="shopOrderBtn" type="button" id="shopOrderBtn">ORDER</button>` : ``}
         </div>
       `;
       bindShopCommonEvents();
@@ -2429,9 +2404,7 @@ if(item.img && (!item.images || !item.images[0])){
       }));
       document.getElementById("shopOrderBtn")?.addEventListener("click", async ()=>{
         try{
-          const dept = String(document.getElementById("shopOrderDept")?.value || "").trim();
-          const person = String(document.getElementById("shopOrderPerson")?.value || "").trim();
-          await submitShopOrder(rows, { dept, person });
+          await submitShopOrder(rows);
           saveShopCart([]);
           await loadAllFromDB_FORCE().catch(()=>{});
           location.hash = "#/shop/orders";
@@ -2453,7 +2426,6 @@ if(item.img && (!item.images || !item.images[0])){
             ${history.length ? history.map(order => `
               <div class="shopOrderGroup">
                 <div class="shopOrderNo">${escapeHtml(order.orderNo || "주문번호")}</div>
-                ${order.rows?.[0] ? `<div class="shopOrderRequester">${escapeHtml(order.rows[0].dept || "-")} · ${escapeHtml(order.rows[0].person || "-")}</div>` : ``}
                 ${(order.rows || []).map(row => {
                   const lineTotal = Number(row.price || 0) * Number(row.qty || 0);
                   return `
@@ -2495,7 +2467,6 @@ if(item.img && (!item.images || !item.images[0])){
                   <div class="shopAdminRequestInfo">
                     <div class="shopAdminRequestName">${escapeHtml(getShopDisplayName(it))}</div>
                     <div class="shopAdminRequestColor">${escapeHtml(getShopColorLabel(it))}</div>
-                    <div class="shopAdminRequester">${escapeHtml(r.dept || '-')} · ${escapeHtml(r.person || '-')}</div>
                     <div class="shopAdminRequestLine"></div>
                     <div class="shopAdminRequestStatus"><span>${escapeHtml(getShopRequestCountText(it))}</span><em>${escapeHtml(getShopRequestBadgeText(r))}</em></div>
                     <div class="shopAdminRequestBottom"><strong>${Number(r.qty || 0)}개</strong><b>${escapeHtml(formatPrice(parsePrice(it.price)))}원</b></div>
@@ -2547,11 +2518,11 @@ if(item.img && (!item.images || !item.images[0])){
             </div>
           </div>
           <div class="shopAdminMiniTable">
-            <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>부서</span><span>신청자</span><span>상태</span></div>
+            <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>전채 부서</span><span>전채 상태</span></div>
             ${requestRows.length ? requestRows.map(r => `
               <label class="shopAdminMiniRow">
                 <input type="checkbox" data-shop-req="${escapeAttr(r.__key)}" checked>
-                <span>${escapeHtml(formatKRDate(r.d))}</span><span>신청</span><span>${escapeHtml(r.dept || '-')}</span><span>${escapeHtml(r.person || '-')}</span><span>${escapeHtml(getShopRequestBadgeText(r))}</span>
+                <span>${escapeHtml(formatKRDate(r.d))}</span><span>신청</span><span>${escapeHtml(r.dept || '-')}</span><span>${escapeHtml(getShopRequestBadgeText(r))}</span>
               </label>
             `).join("") : `<div class="shopAdminMiniEmpty"></div><div class="shopAdminMiniEmpty"></div>`}
           </div>
@@ -2560,9 +2531,9 @@ if(item.img && (!item.images || !item.images[0])){
             <div class="shopAdminActions"><button type="button">삭제</button></div>
           </div>
           <div class="shopAdminMiniTable">
-            <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>부서</span><span>신청자</span><span>수량</span></div>
+            <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>전채 부서</span><span>전채 상태</span></div>
             ${logRows.length ? logRows.map(r => `
-              <div class="shopAdminMiniRow noCheck"><span>${escapeHtml(formatKRDate(r.d))}</span><span>${escapeHtml(r.t || '-')}</span><span>${escapeHtml(r.dept || '-')}</span><span>${escapeHtml(r.person || '-')}</span><span>${Number(r.qty || 0)}개</span></div>
+              <div class="shopAdminMiniRow noCheck"><span>${escapeHtml(formatKRDate(r.d))}</span><span>${escapeHtml(r.t || '-')}</span><span>${escapeHtml(r.dept || '-')}</span><span>${Number(r.qty || 0)}개</span></div>
             `).join("") : `<div class="shopAdminMiniEmpty"></div><div class="shopAdminMiniEmpty"></div>`}
           </div>
         </div>
