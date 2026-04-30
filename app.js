@@ -2491,7 +2491,10 @@ if(item.img && (!item.images || !item.images[0])){
         app.innerHTML = `<div class="paper"><div class="paper-body">제품을 찾을 수 없습니다.</div></div>`;
         return;
       }
-      const requestRows = (it.requests || []).filter(r => (r.status || "pending") === "pending");
+      const requestRows = (it.requests || []).filter(r => {
+  const status = r.status || "pending";
+  return status === "pending" || status === "rejected";
+});
       const logRows = (it.logs || []).filter(r => r.dept === "SHOP" || r.person === "SHOP" || String(r.person || '').includes('@'));
       app.innerHTML = `
         <div class="shopPage shopAdminDetailPage">
@@ -3740,11 +3743,16 @@ const detailImagesHtml = detailImages.length
         if(approveRequestsBtn){
           approveRequestsBtn.addEventListener("click", async ()=>{
             const rows = (it.requests || []).filter(r => selectedRequestKeys.has(r.__key));
-            const pendingRows = rows.filter(r => (r.status || "pending") === "pending");
-            if(pendingRows.length === 0){
-              alert("승인할 요청 내역을 선택해주세요.");
-              return;
-            }
+            const approvableRows = rows.filter(r => {
+  const status = r.status || "pending";
+  return status === "pending" || status === "rejected";
+});
+            for(const r of approvableRows){
+  if(!r._dbid){
+    throw new Error("DB 요청 ID가 없습니다.");
+  }
+  await approveRequestByRpc(r._dbid, approverEmail || "");
+}
 
             const approverEmail = await getCurrentUserEmail();
 
