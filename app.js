@@ -2197,8 +2197,22 @@ if(item.img && (!item.images || !item.images[0])){
       return count > 0 ? `신청 ${count}건` : "신청 0건";
     }
 
+    function shouldHideFromShopAdminStockSummary(item){
+      const id = String(item?.id || "").trim();
+      const name = String(item?.name || "").trim();
+
+      return (
+        id === "etc-shirt-black" ||
+        id === "etc-shirt-white" ||
+        id === "etc-bag" ||
+        name.includes("조지몰튼 티셔츠") ||
+        name.includes("종이가방") ||
+        name.includes("SA 가방")
+      );
+    }
+
     function renderShopAdminStockSummary(){
-      const items = getShopItems();
+      const items = getShopItems().filter(it => !shouldHideFromShopAdminStockSummary(it));
       const totalStock = items.reduce((sum, it) => sum + Number(calcStock(it) || 0), 0);
       const totalPending = items.reduce((sum, it) => {
         return sum + (it.requests || [])
@@ -2223,7 +2237,7 @@ if(item.img && (!item.images || !item.images[0])){
             <span>제품 ${items.length.toLocaleString()}종</span>
           </div>
           <div class="shopAdminStockGrid">
-            ${items.map(it => {
+            ${items.length ? items.map(it => {
               const current = Number(calcStock(it) || 0);
               const pendingQty = (it.requests || [])
                 .filter(r => (r.status || "pending") === "pending")
@@ -2247,7 +2261,7 @@ if(item.img && (!item.images || !item.images[0])){
                   </div>
                 </button>
               `;
-            }).join("")}
+            }).join("") : `<div class="shopAdminStockEmpty">표시할 제품 재고가 없습니다.</div>`}
           </div>
         </section>
       `;
@@ -2552,6 +2566,8 @@ if(item.img && (!item.images || !item.images[0])){
         app.innerHTML = `<div class="paper"><div class="paper-body">제품을 찾을 수 없습니다.</div></div>`;
         return;
       }
+      ensureLogs(it);
+      ensureRequests(it);
       const requestRows = (it.requests || []).filter(r => {
   const status = r.status || "pending";
   return status === "pending" || status === "rejected";
@@ -2589,18 +2605,22 @@ if(item.img && (!item.images || !item.images[0])){
           </div>
           <div class="shopAdminTableTitleRow shopAdminLogTitleRow">
             <h3>입출고 내역</h3>
-            <div class="shopAdminActions"><button type="button">삭제</button></div>
+            <div class="shopAdminActions"><button type="button" id="shopLogDeleteBtn">삭제</button></div>
           </div>
           <div class="shopAdminMiniTable">
             <div class="shopAdminMiniHead"><span>연도. 월. 일.</span><span>구분</span><span>전채 부서</span><span>전채 상태</span></div>
             ${logRows.length ? logRows.map(r => `
-              <div class="shopAdminMiniRow noCheck"><span>${escapeHtml(formatKRDate(r.d))}</span><span>${escapeHtml(r.t || '-')}</span><span>${escapeHtml(r.dept || '-')}</span><span>${Number(r.qty || 0)}개</span></div>
+              <label class="shopAdminMiniRow">
+                <input type="checkbox" data-shop-log="${escapeAttr(r.__key)}">
+                <span>${escapeHtml(formatKRDate(r.d))}</span><span>${escapeHtml(r.t || '-')}</span><span>${escapeHtml(r.dept || '-')}</span><span>${Number(r.qty || 0)}개</span>
+              </label>
             `).join("") : `<div class="shopAdminMiniEmpty"></div><div class="shopAdminMiniEmpty"></div>`}
           </div>
         </div>
       `;
       bindShopCommonEvents();
       const selectedRows = () => requestRows.filter(r => app.querySelector(`[data-shop-req="${CSS.escape(r.__key)}"]`)?.checked);
+      const selectedLogRows = () => logRows.filter(r => app.querySelector(`[data-shop-log="${CSS.escape(r.__key)}"]`)?.checked);
       document.getElementById("shopApproveBtn")?.addEventListener("click", async ()=>{
         const rows = selectedRows();
         if(!rows.length){ alert("승인할 신청 내역을 선택해주세요."); return; }
@@ -2640,6 +2660,24 @@ if(item.img && (!item.images || !item.images[0])){
           renderShopAdminDetailPage(itemId);
         }catch(err){
           alert("삭제 실패: " + (err?.message || err));
+        }
+      });
+
+      document.getElementById("shopLogDeleteBtn")?.addEventListener("click", async ()=>{
+        const rows = selectedLogRows();
+        if(!rows.length){ alert("삭제할 입출고 내역을 선택해주세요."); return; }
+
+        const keys = rows.map(r => r.__key).filter(Boolean);
+        try{
+          if(keys.length){
+            await deleteLogsByKeys(it.id, keys);
+          }
+          it.logs = (it.logs || []).filter(r => !keys.includes(r.__key));
+          saveAllLocal();
+          await loadAllFromDB_FORCE().catch(()=>{});
+          renderShopAdminDetailPage(itemId);
+        }catch(err){
+          alert("입출고 내역 삭제 실패: " + (err?.message || err));
         }
       });
     }
