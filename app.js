@@ -2217,7 +2217,7 @@ if(item.img && (!item.images || !item.images[0])){
     }
 
     function renderShopAdminStockSummary(){
-      const items = getShopItems().filter(it => !shouldHideFromShopAdminStockSummary(it));
+      const items = getShopItems();
       const totalStock = items.reduce((sum, it) => sum + Number(calcStock(it) || 0), 0);
       const totalPending = items.reduce((sum, it) => {
         return sum + (it.requests || [])
@@ -2309,19 +2309,19 @@ if(item.img && (!item.images || !item.images[0])){
       setTopbarTitleLogo();
     }
 
-    function renderShopPageHeader(title="제품 | Product", active="list"){
+    function renderShopPageHeader(title="제품 | Product", active="list", showIcons=true){
       const cartCount = getShopCart().reduce((sum, row)=>sum + Number(row.qty || 0), 0);
       return `
         <div class="shopPageHead">
           <div class="shopPageTitle"><strong>제품</strong><span>|</span><em>Product</em></div>
-          <div class="shopPageIcons">
+          ${showIcons ? `<div class="shopPageIcons">
             <button class="shopIconBtn ${active === 'account' ? 'active' : ''}" type="button" data-shop-account title="마이페이지" aria-label="마이페이지">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12.2c2.25 0 4.05-1.86 4.05-4.15C16.05 5.78 14.25 4 12 4S7.95 5.78 7.95 8.05c0 2.29 1.8 4.15 4.05 4.15Z"/><path d="M5.8 21c.62-3.72 2.98-5.8 6.2-5.8s5.58 2.08 6.2 5.8"/></svg>
             </button>
             <button class="shopIconBtn ${active === 'cart' ? 'active' : ''}" type="button" data-shop-cart title="장바구니" aria-label="장바구니">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 8.5h9.6l.9 11H6.3l.9-11Z"/><path d="M9.2 8.5V7.1A2.8 2.8 0 0 1 12 4.3a2.8 2.8 0 0 1 2.8 2.8v1.4"/></svg>${cartCount ? `<span>${cartCount}</span>` : ``}
             </button>
-          </div>
+          </div>` : ``}
         </div>
       `;
     }
@@ -2659,19 +2659,50 @@ if(item.img && (!item.images || !item.images[0])){
       }));
     }
 
+
+    function getShopRequestYear(row){
+      const raw = String(row?.d || row?.createdAt || row?.created_at || "");
+      const m = raw.match(/^(\d{4})/);
+      if(m) return m[1];
+      return String(new Date().getFullYear());
+    }
+
+    function getShopRequestYearOptions(rows){
+      const years = [...new Set((rows || []).map(getShopRequestYear).filter(Boolean))]
+        .sort((a, b) => Number(b) - Number(a));
+      return years.length ? years : [String(new Date().getFullYear())];
+    }
+
+    function renderShopAdminRequestYearFilter(years, currentYear){
+      return `
+        <div class="shopAdminYearFilter">
+          <label for="shopAdminOrderYear">연도별 보기</label>
+          <select id="shopAdminOrderYear">
+            <option value="all" ${currentYear === "all" ? "selected" : ""}>전체</option>
+            ${years.map(year => `<option value="${escapeAttr(year)}" ${String(currentYear) === String(year) ? "selected" : ""}>${escapeHtml(year)}년</option>`).join("")}
+          </select>
+        </div>
+      `;
+    }
+
     async function renderShopAdminRequestsPage(){
       prepareShopPage("주문 신청 내역");
       await loadAllFromDB_FORCE().catch(()=>{});
-      const rows = getShopRequestRows().filter(r => (r.status || "pending") === "pending");
+      const allRows = getShopRequestRows().filter(r => (r.status || "pending") === "pending");
+      const years = getShopRequestYearOptions(allRows);
+      const savedYear = sessionStorage.getItem("shop_admin_order_year") || "all";
+      const currentYear = savedYear === "all" || years.includes(savedYear) ? savedYear : "all";
+      const rows = currentYear === "all" ? allRows : allRows.filter(r => getShopRequestYear(r) === currentYear);
       app.innerHTML = `
         <div class="shopPage shopAdminRequestsPage">
-          ${renderShopPageHeader("주문 신청 내역", "cart")}
-          <h2 class="shopSubTitle">주문 신청 내역</h2>
+          ${renderShopPageHeader("주문 신청 내역", "cart", false)}
+          <h2 class="shopSubTitle">SHOP</h2>
           ${renderShopAdminStockSummary()}
           <div class="shopAdminRequestTitleRow">
             <h3>주문 신청 내역</h3>
             <span>${rows.length.toLocaleString()}건</span>
           </div>
+          ${renderShopAdminRequestYearFilter(years, currentYear)}
           <div class="shopAdminRequestList">
             ${rows.length ? rows.map(r => {
               const it = r.item;
@@ -2684,6 +2715,7 @@ if(item.img && (!item.images || !item.images[0])){
                     <div class="shopAdminRequestLine"></div>
                     <div class="shopAdminRequestStatus"><span>${escapeHtml(getShopRequestCountText(it))}</span><em>${escapeHtml(getShopRequestBadgeText(r))}</em></div>
                     <div class="shopAdminRequestBottom"><strong>${Number(r.qty || 0)}개</strong><b>${escapeHtml(formatPrice(parsePrice(it.price)))}원</b></div>
+                    <div class="shopAdminRequestRequester">${escapeHtml(formatKRDate(r.d))} · ${escapeHtml(r.dept || '-')} / ${escapeHtml(r.person || '-')}</div>
                   </div>
                 </button>
               `;
@@ -2692,6 +2724,11 @@ if(item.img && (!item.images || !item.images[0])){
         </div>
       `;
       bindShopCommonEvents();
+      const yearSelect = document.getElementById("shopAdminOrderYear");
+      yearSelect?.addEventListener("change", async ()=>{
+        sessionStorage.setItem("shop_admin_order_year", yearSelect.value || "all");
+        await renderShopAdminRequestsPage();
+      });
       app.querySelectorAll("[data-admin-shop-open]").forEach(btn => {
         btn.addEventListener("click", ()=>{ location.hash = `#/admin/shop/item/${btn.dataset.adminShopOpen}`; });
       });
@@ -2714,7 +2751,7 @@ if(item.img && (!item.images || !item.images[0])){
       const logRows = (it.logs || []).filter(r => r.dept === "SHOP" || r.person === "SHOP" || String(r.person || '').includes('@'));
       app.innerHTML = `
         <div class="shopPage shopAdminDetailPage">
-          ${renderShopPageHeader("주문 신청 내역", "cart")}
+          ${renderShopPageHeader("주문 신청 내역", "cart", false)}
           <h2 class="shopSubTitle">주문 신청 내역</h2>
           <div class="shopAdminDetailHero">
             <div class="shopAdminDetailImg">${it.img ? renderSmartImage(it.img, it.name) : iconPlaceholder()}</div>

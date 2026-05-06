@@ -5297,3 +5297,41 @@ body.mode-list .stockStatusQty{
     top:10px;
   }
 }
+
+/* PATCH v6: 관리자 SHOP 주문 신청 내역 연도 필터/신청자 표시 */
+.shopAdminYearFilter{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  margin:0 0 16px;
+}
+.shopAdminYearFilter label{
+  font-size:11px;
+  font-weight:600;
+  color:#666;
+  white-space:nowrap;
+}
+.shopAdminYearFilter select{
+  height:34px;
+  min-width:120px;
+  border:1px solid #dcdcdc;
+  background:#fff;
+  padding:0 28px 0 10px;
+  font-size:12px;
+  font-family:inherit;
+  color:#111;
+  border-radius:0;
+}
+.shopAdminRequestRequester{
+  margin-top:10px;
+  padding-top:8px;
+  border-top:1px solid #eeeeee;
+  font-size:11px;
+  color:#777;
+  line-height:1.4;
+}
+@media (max-width:640px){
+  .shopAdminYearFilter{ justify-content:space-between; }
+  .shopAdminYearFilter select{ flex:0 0 130px; }
+}
