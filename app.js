@@ -180,7 +180,7 @@ const SUPABASE_URL = "https://mpyxzzbmpweakzjemngm.supabase.co";
       "2029": [],
       "2028": [],
       "2027": [],
-      "2026": ["191회", "190회", "189회"]
+      "2026": ["190회", "189회"]
     },
   
   },
@@ -314,7 +314,7 @@ const SUPABASE_URL = "https://mpyxzzbmpweakzjemngm.supabase.co";
             ],
           },
           {
-            id: "mint-delivery-bag-big",
+            hidden_id: "mint-delivery-bag-big",
             name: "민트봉투(大)",
             size: "290*400mm",
             baseStock: 6500,
@@ -325,7 +325,7 @@ const SUPABASE_URL = "https://mpyxzzbmpweakzjemngm.supabase.co";
             ]
           },
           {
-            id: "mint-delivery-bag-small",
+            hidden_id: "mint-delivery-bag-small",
             name: "민트봉투(小)",
             size: "290*400mm",
             baseStock: 1000,
@@ -5153,7 +5153,7 @@ function renderCatalogDetail(catalogId){
 /* ===== FINAL DIRECT FIX: 물품재고현황 도록 카드 클릭 시 신청 폼 열기 ===== */
 (function(){
   const STOCK_CATALOG_PAYLOADS = {
-    "offline-auction": { year:"2026", round:"191회", currentStock:10 },
+    
     "contemporary-art-auction": { year:"2026", round:"3월 컨템", currentStock:5 },
     "zero-base": { year:"2026", round:"5월 화성", currentStock:5 }
   };
