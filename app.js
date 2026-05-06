@@ -2010,7 +2010,7 @@ if(item.img && (!item.images || !item.images[0])){
                 : `<button class="mainHomeBtn requestDarkBtn" id="goRequestPage" type="button"> 신청하기</button>`
             }
             <button class="mainHomeBtn stockBtn" id="goStockPage" type="button">물품 재고현황</button>
-            <button class="mainHomeBtn shopHomeBtn" id="goShopPage" type="button">제품 구매하기</button>
+            <button class="mainHomeBtn shopHomeBtn" id="goShopPage" type="button">SA SHOP</button>
             <button class="mainHomeBtn logoutBtn" id="logoutBtn" type="button">로그아웃</button>
           </div>
         </div>
@@ -4620,7 +4620,14 @@ const detailImagesHtml = detailImages.length
     homeLink?.addEventListener("click", (e)=>{
       const hash = location.hash || "";
 
-      if(hash.startsWith("#/request") || hash.startsWith("#/shop")){
+      if(hash.startsWith("#/shop")){
+        e.preventDefault();
+        if(q) q.value = "";
+        location.hash = "#/shop";
+        return;
+      }
+
+      if(hash.startsWith("#/request")){
         e.preventDefault();
         if(q) q.value = "";
         location.hash = "#/request";
