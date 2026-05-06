@@ -2197,6 +2197,62 @@ if(item.img && (!item.images || !item.images[0])){
       return count > 0 ? `신청 ${count}건` : "신청 0건";
     }
 
+    function renderShopAdminStockSummary(){
+      const items = getShopItems();
+      const totalStock = items.reduce((sum, it) => sum + Number(calcStock(it) || 0), 0);
+      const totalPending = items.reduce((sum, it) => {
+        return sum + (it.requests || [])
+          .filter(r => (r.status || "pending") === "pending")
+          .reduce((s, r) => s + Number(r.qty || 0), 0);
+      }, 0);
+
+      return `
+        <section class="shopAdminStockSummary" aria-label="SHOP 제품 재고 현황">
+          <div class="shopAdminStockSummaryHead">
+            <div>
+              <h3>SHOP 제품 재고 현황</h3>
+              <p>주문 신청 리스트와 별개로, 현재 shop 물품별 남은 재고를 확인합니다.</p>
+            </div>
+            <div class="shopAdminStockSummaryTotal">
+              <span>전체 재고</span>
+              <strong>${totalStock.toLocaleString()}개</strong>
+            </div>
+          </div>
+          <div class="shopAdminStockSummaryMeta">
+            <span>대기 신청 수량 ${totalPending.toLocaleString()}개</span>
+            <span>제품 ${items.length.toLocaleString()}종</span>
+          </div>
+          <div class="shopAdminStockGrid">
+            ${items.map(it => {
+              const current = Number(calcStock(it) || 0);
+              const pendingQty = (it.requests || [])
+                .filter(r => (r.status || "pending") === "pending")
+                .reduce((sum, r) => sum + Number(r.qty || 0), 0);
+              const stockState = current <= 0 ? "empty" : (current <= 10 ? "low" : "ok");
+              const stateLabel = current <= 0 ? "품절" : (current <= 10 ? "부족" : "보유");
+              return `
+                <button class="shopAdminStockCard ${stockState}" type="button" data-admin-shop-open="${escapeAttr(it.id)}">
+                  <div class="shopAdminStockThumb">${it.img ? renderSmartImage(it.img, it.name) : iconPlaceholder()}</div>
+                  <div class="shopAdminStockInfo">
+                    <div class="shopAdminStockName">${escapeHtml(getShopDisplayName(it))}</div>
+                    <div class="shopAdminStockColor">${escapeHtml(getShopColorLabel(it))}</div>
+                    <div class="shopAdminStockNumbers">
+                      <span>현재 재고</span>
+                      <strong>${current.toLocaleString()}개</strong>
+                    </div>
+                    <div class="shopAdminStockSub">
+                      <em>${escapeHtml(stateLabel)}</em>
+                      <span>대기 ${pendingQty.toLocaleString()}개</span>
+                    </div>
+                  </div>
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </section>
+      `;
+    }
+
     function renderShopSection(section){
       return `
         <section class="shopSection">
@@ -2458,6 +2514,11 @@ if(item.img && (!item.images || !item.images[0])){
         <div class="shopPage shopAdminRequestsPage">
           ${renderShopPageHeader("구매 신청내역", "cart")}
           <h2 class="shopSubTitle">구매 신청내역</h2>
+          ${renderShopAdminStockSummary()}
+          <div class="shopAdminRequestTitleRow">
+            <h3>주문 신청 리스트</h3>
+            <span>${rows.length.toLocaleString()}건</span>
+          </div>
           <div class="shopAdminRequestList">
             ${rows.length ? rows.map(r => {
               const it = r.item;
@@ -2832,7 +2893,7 @@ function renderCatalogDetail(catalogId){
       }
 
       const allDepts = [
-        "경영기획팀","인사팀","관재팀","재무팀","경매팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"
+        "경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"
       ];
 
       let reqDateFilter = "";
@@ -3244,7 +3305,7 @@ function renderCatalogApplyPage(catalogId){
       const currentStock = Number(saved?.currentStock ?? config.currentStock ?? 0);
 
       const allDepts = [
-        "경영기획팀","인사팀","관재팀","재무팀","경매팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"
+        "경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"
       ];
 
       app.innerHTML = `
@@ -3387,7 +3448,7 @@ function renderCatalogApplyPage(catalogId){
       let selectedLogKeys = new Set();
 
       const allDepts = [
-        "경영기획팀","인사팀","관재팀","재무팀","경매팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀","관재팀",
+        "경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀","인사팀","관재팀","재무팀",
       ];
 
       let reqDeptFilter = "전체";
@@ -4828,7 +4889,7 @@ function renderCatalogDetail(catalogId){
     let modal = document.getElementById("stockCatalogApplyModal");
     if(modal) return modal;
 
-    const depts = ["경영기획팀","인사팀","관재팀","재무팀","경매팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
+    const depts = ["경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
 
     modal = document.createElement("div");
     modal.className = "modal stockCatalogApplyModal";
@@ -5030,7 +5091,7 @@ async function renderCatalogDetail(catalogId){
     return;
   }
 
-  const allDepts = ["경영기획팀","인사팀","관재팀","재무팀","경매팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
+  const allDepts = ["경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
   let selectedRequestKeys = new Set();
   let selectedLogKeys = new Set();
   let viewMode = sessionStorage.getItem(`catalog_view_${catalogId}`) || "gallery";
