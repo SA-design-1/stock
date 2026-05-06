@@ -2945,7 +2945,6 @@ if(item.img && (!item.images || !item.images[0])){
 
     function renderStockCatalogSummary(){
       const cards = [
-        { title:"Major Auction", year:"2026", round:"191회", stock:"10개", id:"offline-auction" },
         { title:"Contemporary<br>Art Sale", year:"2026", round:"3월", stock:"5개", id:"contemporary-art-auction" },
         { title:"ZERO BASE", year:"2026", round:"5월 화성", stock:"5개", id:"zero-base" }
       ];
@@ -2996,7 +2995,12 @@ if(item.img && (!item.images || !item.images[0])){
       const sectionsHtml = data.map((section, sectionIndex) => {
         const filtered = (section.items||[]).filter(it => {
           const hay = `${it.name} ${it.size}`.toLowerCase();
-          return keyword ? hay.includes(keyword) : true;
+          const matchesKeyword = keyword ? hay.includes(keyword) : true;
+          if(isStockMode){
+            const itemName = String(it?.name || "");
+            if(itemName.includes("민트봉투")) return false;
+          }
+          return matchesKeyword;
         });
 
         if(filtered.length === 0) return "";
