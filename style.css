@@ -5085,3 +5085,215 @@ body.mode-list .stockStatusQty{
   color:#888;
   font-size:12px;
 }
+
+/* PATCH v3: SHOP 주문 신청 정보 / 관리자 기존 재고 수정 */
+.shopOrderRequestForm{
+  margin:28px 0 0;
+  padding:18px 20px;
+  border:1px solid #dedede;
+  background:#fafafa;
+}
+
+.shopOrderRequestTitle{
+  margin:0 0 12px;
+  font-size:13px;
+  font-weight:700;
+  color:#222;
+  letter-spacing:-0.03em;
+}
+
+.shopOrderRequestFields{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:12px;
+}
+
+.shopOrderRequestFields label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  font-size:11px;
+  color:#666;
+  font-weight:600;
+}
+
+.shopOrderRequestFields input{
+  width:100%;
+  height:38px;
+  border:1px solid #d8d8d8;
+  background:#fff;
+  padding:0 12px;
+  font-size:13px;
+  outline:none;
+  font-family:inherit;
+}
+
+.shopOrderRequestFields input:focus{
+  border-color:#111;
+}
+
+.shopOrderRequester{
+  margin-top:6px;
+  font-size:11px;
+  color:#777;
+  text-align:right;
+}
+
+.shopAdminBaseStockEdit{
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid #ededed;
+}
+
+.shopAdminBaseStockEdit > button,
+.shopAdminBaseStockEditRow button{
+  height:28px;
+  border:1px solid #d7d7d7;
+  background:#fff;
+  color:#111;
+  padding:0 10px;
+  font-size:11px;
+  cursor:pointer;
+  font-family:inherit;
+}
+
+.shopAdminBaseStockEdit > button{
+  width:100%;
+  background:#f8f8f8;
+}
+
+.shopAdminBaseStockEditRow{
+  display:none;
+  grid-template-columns:minmax(0, 1fr) 48px 48px;
+  gap:6px;
+  margin-top:8px;
+}
+
+.shopAdminBaseStockEditRow.show{
+  display:grid;
+}
+
+.shopAdminBaseStockEditRow input{
+  min-width:0;
+  height:28px;
+  border:1px solid #d7d7d7;
+  padding:0 8px;
+  font-size:12px;
+  font-family:inherit;
+}
+
+@media (max-width:640px){
+  .shopOrderRequestFields{
+    grid-template-columns:1fr;
+  }
+}
+
+/* ===== SHOP 주문 신청/주문완료 분리 ===== */
+.shopOrderSection{
+  margin:0 0 46px;
+}
+
+.shopOrderSection.completed{
+  margin-top:34px;
+}
+
+.shopOrderSectionHead{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:14px;
+  margin:0 0 16px;
+  border-bottom:1px solid #e5e5e5;
+  padding-bottom:10px;
+}
+
+.shopOrderSectionHead h3{
+  margin:0;
+  font-size:16px;
+  font-weight:800;
+  color:#222;
+  letter-spacing:-0.04em;
+}
+
+.shopOrderSectionHead p{
+  margin:0;
+  font-size:12px;
+  color:#777;
+  letter-spacing:-0.03em;
+  text-align:right;
+}
+
+.shopOrderRow{
+  position:relative;
+}
+
+.shopOrderDeleteBtn{
+  position:absolute;
+  right:14px;
+  top:12px;
+  min-width:54px;
+  height:26px;
+  border:1px solid #ddd;
+  background:#fff;
+  color:#555;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  z-index:2;
+}
+
+.shopOrderDeleteBtn:hover{
+  background:#222;
+  border-color:#222;
+  color:#fff;
+}
+
+.shopOrderStatus{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:max-content;
+  min-width:72px;
+  height:24px;
+  margin-top:8px;
+  padding:0 10px;
+  border:1px solid #dcdcdc;
+  background:#fafafa;
+  color:#555;
+  font-size:12px;
+  font-weight:700;
+}
+
+.shopOrderStatus.approved{
+  border-color:#9fd7d4;
+  background:#eefbf9;
+  color:#179b96;
+}
+
+.shopOrderStatus.rejected{
+  border-color:#ffd5d5;
+  background:#fff7f7;
+  color:#c63e3e;
+}
+
+.shopOrderStatus.pending{
+  border-color:#e5e5e5;
+  background:#f8f8f8;
+  color:#555;
+}
+
+@media (max-width:640px){
+  .shopOrderSectionHead{
+    display:block;
+  }
+
+  .shopOrderSectionHead p{
+    margin-top:6px;
+    text-align:left;
+  }
+
+  .shopOrderDeleteBtn{
+    right:10px;
+    top:10px;
+  }
+}
