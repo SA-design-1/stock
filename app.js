@@ -2217,7 +2217,12 @@ if(item.img && (!item.images || !item.images[0])){
     }
 
     function renderShopAdminStockSummary(){
-      const items = getShopItems();
+      const allowedAdminShopStockIds = new Set([
+        "etc-shirt-black",
+        "etc-shirt-white",
+        "etc-bag"
+      ]);
+      const items = getShopItems().filter(it => allowedAdminShopStockIds.has(String(it?.id || "")));
       const totalStock = items.reduce((sum, it) => sum + Number(calcStock(it) || 0), 0);
       const totalPending = items.reduce((sum, it) => {
         return sum + (it.requests || [])
