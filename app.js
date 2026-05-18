@@ -2464,8 +2464,8 @@ if(item.img && (!item.images || !item.images[0])){
             <div class="shopOrderRequestForm" aria-label="주문 신청자 정보">
               <div class="shopOrderRequestTitle">주문 신청 정보</div>
               <div class="shopOrderRequestFields">
-                <label><span>부서</span><input id="shopOrderDept" type="text" placeholder="예) 디자인팀"></label>
-                <label><span>신청자</span><input id="shopOrderPerson" type="text" placeholder="예) 손영실"></label>
+                <label><span>부서</span><input id="shopOrderDept" type="text" placeholder="팀명"></label>
+                <label><span>신청자</span><input id="shopOrderPerson" type="text" placeholder="신청자명"></label>
               </div>
             </div>
             <button class="shopOrderBtn" type="button" id="shopOrderBtn">ORDER</button>
