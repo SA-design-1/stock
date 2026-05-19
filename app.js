@@ -314,27 +314,27 @@ const SUPABASE_URL = "https://mpyxzzbmpweakzjemngm.supabase.co";
             ],
           },
           {
-            hidden_id: "mint-delivery-bag-big",
-            name: "민트봉투(大)",
-            size: "290*400mm",
-            baseStock: 6500,
-            img: "mint-delivery-bag-1.jpg",
-            images: ["mint-delivery-bag-1.jpg", null],
-            logs: [
-              { d:"2026-02-12", t:"출고", dept:"운영팀", person:"ooo", qty:50 },
-            ]
-          },
-          {
-            hidden_id: "mint-delivery-bag-small",
-            name: "민트봉투(小)",
-            size: "290*400mm",
-            baseStock: 1000,
-            img: "mint-delivery-bag-2.jpg",
-            images: ["mint-delivery-bag-2.jpg", null],
-            logs: [
-              { d:"2026-02-12", t:"출고", dept:"운영팀", person:"ooo", qty:50 },
-            ]
-          },
+  id: "mint-delivery-bag-big",
+  name: "민트봉투(大)",
+  size: "290*400mm",
+  baseStock: 6500,
+  img: "mint-delivery-bag-1.jpg",
+  images: ["mint-delivery-bag-1.jpg", null],
+  logs: [
+    { d:"2026-02-12", t:"출고", dept:"운영팀", person:"ooo", qty:50 },
+  ]
+},
+{
+  id: "mint-delivery-bag-small",
+  name: "민트봉투(小)",
+  size: "290*400mm",
+  baseStock: 1000,
+  img: "mint-delivery-bag-2.jpg",
+  images: ["mint-delivery-bag-2.jpg", null],
+  logs: [
+    { d:"2026-02-12", t:"출고", dept:"운영팀", person:"ooo", qty:50 },
+  ]
+},
         ]
       },
       {
