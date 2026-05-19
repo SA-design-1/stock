@@ -314,27 +314,27 @@ const SUPABASE_URL = "https://mpyxzzbmpweakzjemngm.supabase.co";
             ],
           },
           {
-            hidden_id: "mint-delivery-bag-big",
-            name: "민트봉투(大)",
-            size: "290*400mm",
-            baseStock: 6500,
-            img: "mint-delivery-bag-1.jpg",
-            images: ["mint-delivery-bag-1.jpg", null],
-            logs: [
-              { d:"2026-02-12", t:"출고", dept:"운영팀", person:"ooo", qty:50 },
-            ]
-          },
-          {
-            hidden_id: "mint-delivery-bag-small",
-            name: "민트봉투(小)",
-            size: "290*400mm",
-            baseStock: 1000,
-            img: "mint-delivery-bag-2.jpg",
-            images: ["mint-delivery-bag-2.jpg", null],
-            logs: [
-              { d:"2026-02-12", t:"출고", dept:"운영팀", person:"ooo", qty:50 },
-            ]
-          },
+  id: "mint-delivery-bag-big",
+  name: "민트봉투(大)",
+  size: "290*400mm",
+  baseStock: 6500,
+  img: "mint-delivery-bag-1.jpg",
+  images: ["mint-delivery-bag-1.jpg", null],
+  logs: [
+    { d:"2026-02-12", t:"출고", dept:"운영팀", person:"ooo", qty:50 },
+  ]
+},
+{
+  id: "mint-delivery-bag-small",
+  name: "민트봉투(小)",
+  size: "290*400mm",
+  baseStock: 1000,
+  img: "mint-delivery-bag-2.jpg",
+  images: ["mint-delivery-bag-2.jpg", null],
+  logs: [
+    { d:"2026-02-12", t:"출고", dept:"운영팀", person:"ooo", qty:50 },
+  ]
+},
         ]
       },
       {
@@ -3165,7 +3165,7 @@ function renderCatalogDetail(catalogId){
       }
 
       const allDepts = [
-        "경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"
+        "경매기획운영팀","경영기획팀","고객관리팀","관재팀","대외협력팀","디자인팀","미래전략실","법무팀","브랜드기획팀","서비스운영팀","아카이브팀","영업팀","웹서비스개발팀","인사팀","작품관리팀","재무팀","전시사업팀","정책기획실","파트너그룹","해외전략팀","VIP사업기획팀"
       ];
 
       let reqDateFilter = "";
@@ -3577,7 +3577,7 @@ function renderCatalogApplyPage(catalogId){
       const currentStock = Number(saved?.currentStock ?? config.currentStock ?? 0);
 
       const allDepts = [
-        "경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"
+        "경매기획운영팀","경영기획팀","고객관리팀","관재팀","대외협력팀","디자인팀","미래전략실","법무팀","브랜드기획팀","서비스운영팀","아카이브팀","영업팀","웹서비스개발팀","인사팀","작품관리팀","재무팀","전시사업팀","정책기획실","파트너그룹","해외전략팀","VIP사업기획팀"
       ];
 
       app.innerHTML = `
@@ -3720,7 +3720,7 @@ function renderCatalogApplyPage(catalogId){
       let selectedLogKeys = new Set();
 
       const allDepts = [
-        "경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀","인사팀","관재팀","재무팀",
+        "경매기획운영팀","경영기획팀","고객관리팀","관재팀","대외협력팀","디자인팀","미래전략실","법무팀","브랜드기획팀","서비스운영팀","아카이브팀","영업팀","웹서비스개발팀","인사팀","작품관리팀","재무팀","전시사업팀","정책기획실","파트너그룹","해외전략팀","VIP사업기획팀"
       ];
 
       let reqDeptFilter = "전체";
@@ -4821,7 +4821,7 @@ function renderCatalogDetail(catalogId){
     return;
   }
 
-  const allDepts = ["경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
+  const allDepts = ["경매기획운영팀","경영기획팀","고객관리팀","관재팀","대외협력팀","디자인팀","미래전략실","법무팀","브랜드기획팀","서비스운영팀","아카이브팀","영업팀","웹서비스개발팀","인사팀","작품관리팀","재무팀","전시사업팀","정책기획실","파트너그룹","해외전략팀","VIP사업기획팀"];
   let reqDateFilter = "";
   let reqDeptFilter = "전체";
   let reqStatusFilter = "전체";
@@ -5370,7 +5370,7 @@ async function renderCatalogDetail(catalogId){
     return;
   }
 
-  const allDepts = ["경영기획팀","인사팀","관재팀","재무팀","서비스운영팀","아카이브팀","대외협력팀","디자인팀","영업팀","브랜드기획팀","고객관리팀","작품관리팀","VIP사업기획팀","웹서비스개발팀"];
+  const allDepts = ["경매기획운영팀","경영기획팀","고객관리팀","관재팀","대외협력팀","디자인팀","미래전략실","법무팀","브랜드기획팀","서비스운영팀","아카이브팀","영업팀","웹서비스개발팀","인사팀","작품관리팀","재무팀","전시사업팀","정책기획실","파트너그룹","해외전략팀","VIP사업기획팀"];
   let selectedRequestKeys = new Set();
   let selectedLogKeys = new Set();
   let viewMode = sessionStorage.getItem(`catalog_view_${catalogId}`) || "gallery";
