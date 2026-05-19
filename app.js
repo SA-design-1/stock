@@ -1172,10 +1172,23 @@ function calcStock(it){
     }
 
     function flattenItems(){
-      const arr = [];
-      for(const sec of data) for(const it of sec.items) arr.push(it);
-      return arr;
+  const arr = [];
+  const seen = new Set();
+
+  for(const sec of data){
+    for(const it of (sec.items || [])){
+      if(!it || !it.id) continue;
+
+      const key = String(it.id);
+      if(seen.has(key)) continue;
+
+      seen.add(key);
+      arr.push(it);
     }
+  }
+
+  return arr;
+}
 
     function applyCustomItemOrder(){
       const holderOrderIds = ["holder-gray", "office-holder-sky", "holder-navy", "holder-purple"];
