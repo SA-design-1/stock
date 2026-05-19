@@ -1171,24 +1171,11 @@ function calcStock(it){
       return null;
     }
 
-function flattenItems(){
-  const arr = [];
-  const seen = new Set();
-
-  for(const sec of data){
-    for(const it of (sec.items || [])){
-      if(!it || !it.id) continue;
-
-      const id = String(it.id);
-      if(seen.has(id)) continue;
-
-      seen.add(id);
-      arr.push(it);
+    function flattenItems(){
+      const arr = [];
+      for(const sec of data) for(const it of sec.items) arr.push(it);
+      return arr;
     }
-  }
-
-  return arr;
-}
 
     function applyCustomItemOrder(){
       const holderOrderIds = ["holder-gray", "office-holder-sky", "holder-navy", "holder-purple"];
@@ -3006,25 +2993,7 @@ if(item.img && (!item.images || !item.images[0])){
       const showCatalogMenu = false; // 도록 신청하기/도록 메뉴 전체 비노출
 
       const sectionsHtml = data.map((section, sectionIndex) => {
-const seenItemIds = new Set();
-
-const filtered = (section.items || []).filter(it => {
-  if(!it || !it.id) return false;
-
-  const id = String(it.id);
-  if(seenItemIds.has(id)) return false;
-  seenItemIds.add(id);
-
-  const hay = `${it.name} ${it.size}`.toLowerCase();
-  const matchesKeyword = keyword ? hay.includes(keyword) : true;
-
-  if(isStockMode){
-    const itemName = String(it?.name || "");
-    if(itemName.includes("민트봉투")) return false;
-  }
-
-  return matchesKeyword;
-});
+        const filtered = (section.items||[]).filter(it => {
           const hay = `${it.name} ${it.size}`.toLowerCase();
           const matchesKeyword = keyword ? hay.includes(keyword) : true;
           if(isStockMode){
